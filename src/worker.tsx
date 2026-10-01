@@ -1,8 +1,18 @@
 import { defineApp } from "rwsdk/worker";
-import { render, route } from "rwsdk/router";
+import { render, layout, route } from "rwsdk/router";
 import { Document } from "@/app/Document";
 import { setCommonHeaders } from "@/app/headers";
+
+import { AppLayout } from "@/app/layouts/AppLayout"
 import { Home } from "@/app/pages/Home";
+import { Explore } from "@/app/pages/Explore";
+import { Drawing } from "@/app/pages/Drawing";
+import { Register } from "@/app/pages/Register";
+import { Login } from "@/app/pages/Login";
+import { Profile } from "@/app/pages/Profile";
+import { MyPage } from "@/app/pages/MyPage";
+import { Canvas } from "@/app/pages/Canvas";
+import { Admin } from "@/app/pages/Admin";
 
 /**
  * Alt som ligger på `ctx` for én forespørsel.
@@ -23,7 +33,19 @@ const app = defineApp([
   ),
 
   // Sider. render(Document, [...]) pakker dem i et helt HTML-dokument.
-  render(Document, [route("/", Home)]),
+  render(Document, [
+    layout(AppLayout, [
+        route("/", Home),
+        route("/explore", Explore),
+        route("/drawing/:id", Drawing),
+        route("/register", Register),
+        route("/login", Login),
+        route("/profile/:username", Profile),
+        route("/myPage", MyPage),
+        route("/canvas/:id", Canvas),
+        route("/admin", Admin)
+    ]),
+  ]),
 ]);
 
 export default { fetch: app.fetch };
