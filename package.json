@@ -48,7 +48,7 @@
     "zod": "4.5.4"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.54.4",
+    "@cloudflare/vite-plugin": "^1.62.3",
     "@cloudflare/workers-types": "5.20260907.1",
     "@playwright/test": "1.63.0",
     "@rolldown/plugin-babel": "0.2.4",
@@ -70,7 +70,7 @@
     "typescript": "7.0.2",
     "vite": "8.2.2",
     "vitest": "4.1.11",
-    "wrangler": "4.129.0"
+    "wrangler": "^4.145.0"
   },
   "allowScripts": {
     "better-sqlite3": true,
