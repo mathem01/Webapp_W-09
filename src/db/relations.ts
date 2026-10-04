@@ -10,18 +10,35 @@ import { defineRelations } from "drizzle-orm";
 import * as schema from "./schema";
 
 export const relations = defineRelations(schema, (r) => ({
-  users: {
-    // En bruker har mange oppgaver.
-    tasks: r.many.tasks({ from: r.users.id, to: r.tasks.userId }),
+  user: {
+    sessions: r.many.session({
+      from: r.user.id,
+      to: r.session.userId,
+    }),
+
+    accounts: r.many.account({
+      from: r.user.id,
+      to: r.account.userId,
+    }),
   },
-  tasks: {
-    // En oppgave har én bruker. `optional: false` gjør den ikke-nullbar i typen.
-    user: r.one.users({
-      from: r.tasks.userId,
-      to: r.users.id,
+
+  session: {
+    user: r.one.user({
+      from: r.session.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+  },
+
+  account: {
+    user: r.one.user({
+      from: r.account.userId,
+      to: r.user.id,
       optional: false,
     }),
   },
 }));
 
 export type Relations = typeof relations;
+
+

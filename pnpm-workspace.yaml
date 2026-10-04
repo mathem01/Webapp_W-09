@@ -13,6 +13,6 @@ allowBuilds:
 # karantenen, og er sluppet gjennom med vilje. Blir lista lengre hos deg, er
 # det pnpm som har skrevet den, og da er det greit å sjekke den inn.
 minimumReleaseAgeExclude:
-  - '@cloudflare/workers-types@5.20260907.1'
+  - '@cloudflare/workers-types@5.20260907.1 || 5.20261004.1'
   - '@rolldown/plugin-babel@0.2.4'
   - lucide-react@1.42.0
