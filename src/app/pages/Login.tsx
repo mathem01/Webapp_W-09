@@ -1,23 +1,18 @@
-/**
- * Innloggingssiden. Foreløpig bare utseende: skjemaet sender ingenting før
- * better-auth kobles på. Feltnavnene (`email`, `password`) er de better-auth
- * forventer, så den som kobler på auth slipper å endre markupen.
- *
- * Server-komponent: ingen state eller klikk-håndtering, bare HTML og Tailwind.
- */
+
 export function Login() {
   return (
     <section className="flex justify-center bg-neutral-200 px-4 py-16">
       <div className="w-full max-w-md rounded-xl bg-neutral-500 px-10 py-8 text-white">
         <h1 className="text-center text-3xl uppercase">Logg inn</h1>
 
-        {/* method="post" så passordet aldri havner i adressefeltet. */}
+        
         <form method="post" className="mt-4 flex flex-col">
           <label htmlFor="email" className="text-sm">
             Email
           </label>
           <input
             id="email"
+            placeholder="ola.nordmann@example.com"
             name="email"
             type="email"
             autoComplete="email"

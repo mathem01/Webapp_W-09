@@ -12,6 +12,7 @@ export function Register() {
           </label>
           <input
             id="name"
+            placeholder="Ola Nordmann"
             name="name"
             type="text"
             autoComplete="name"
@@ -24,6 +25,7 @@ export function Register() {
           </label>
           <input
             id="email"
+            placeholder="ola.nordmann@example.com"
             name="email"
             type="email"
             autoComplete="email"
