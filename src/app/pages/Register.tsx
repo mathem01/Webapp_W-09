@@ -46,9 +46,7 @@ export function Register() {
             aria-describedby="password-hint"
             className="mt-1 h-11 rounded-sm bg-neutral-200 px-3 text-neutral-900 outline-none focus:ring-2 focus:ring-white"
           />
-          <p id="password-hint" className="mt-1 text-xs text-neutral-200">
-            Minst 12 tegn
-          </p>
+          
 
           <button
             type="submit"
