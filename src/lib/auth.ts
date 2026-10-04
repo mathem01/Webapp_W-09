@@ -20,5 +20,25 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
+    autoSignIn: true,
+    // Lengde slår kompleksitet (NIST 2017). Må matche PASSWORD_MIN i
+    // src/auth/schemas.ts og minLength på passordfeltet i skjemaene.
+    minPasswordLength: 12,
+  },
+
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 dager
+    updateAge: 60 * 60 * 24, // forleng cookie dagvis ved aktivitet
+  },
+
+  advanced: {
+    cookies: {
+      sessionToken: {
+        attributes: { httpOnly: true, secure: true, sameSite: "lax" },
+      },
+    },
+    generateId: () => crypto.randomUUID(),
   },
 });
+
+export type AuthSession = typeof auth.$Infer.Session;
