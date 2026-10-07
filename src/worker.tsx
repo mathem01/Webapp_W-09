@@ -35,11 +35,11 @@ const app = defineApp([
   // API-rute. Ligger UTENFOR render(), så svaret er akkurat det handleren
   // returnerer: JSON, uten HTML-skall rundt.
   
-  route("/api/auth/*", ({ request }) => 
+  route("/api/v1/auth/*", ({ request }) => 
     auth.handler(request)
   ),
 
-  route("/api/status", () =>
+  route("/api/v1/status", () =>
     Response.json({ status: "ok", version: "0.1.0" })
   ),
 
