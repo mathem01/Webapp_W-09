@@ -4,12 +4,16 @@ import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
 export const user = sqliteTable("user", {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  username: text('username').notNull().unique(),
   email: text('email').notNull().unique(),
   emailVerified: integer('email_verified', { mode: 'boolean' }).default(false).notNull(),
   image: text('image'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`).notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`).$onUpdate(() => /* @__PURE__ */ new Date()).notNull()
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`).$onUpdate(() => /* @__PURE__ */ new Date()).notNull(),
+  role: text('role'),
+  banned: integer('banned', { mode: 'boolean' }).default(false),
+  banReason: text('ban_reason'),
+  banExpires: integer('ban_expires', { mode: 'timestamp_ms' }),
+  username: text('username').notNull().unique()
 });
 
 export const session = sqliteTable("session", {
@@ -20,7 +24,8 @@ export const session = sqliteTable("session", {
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).$onUpdate(() => /* @__PURE__ */ new Date()).notNull(),
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
-  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' })
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  impersonatedBy: text('impersonated_by')
 }, (table) => [
   index("session_userId_idx").on(table.userId),
 ]);

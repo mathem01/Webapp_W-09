@@ -5,6 +5,7 @@ import { Document } from "@/app/Document";
 import { setCommonHeaders } from "@/app/headers";
 import { auth } from "./lib/auth";
 import { Session, sessionMiddleware } from "./middleware/session";
+import { requireGuest, requireAuth, requireAdmin } from "./middleware/guards";
 
 import { AppLayout } from "@/app/layouts/AppLayout"
 import { Home } from "@/app/pages/Home";
@@ -46,15 +47,22 @@ const app = defineApp([
   // Sider. render(Document, [...]) pakker dem i et helt HTML-dokument.
   render(Document, [
     layout(AppLayout, [
+        // Everyone
         route("/", Home),
         route("/explore", Explore),
         route("/drawing/:id", Drawing),
-        route("/register", Register),
-        route("/login", Login),
         route("/profile/:username", Profile),
-        route("/myPage", MyPage),
-        route("/canvas/:id", Canvas),
-        route("/admin", Admin)
+
+        // Guests-Only
+        route("/register", [requireGuest, Register]),
+        route("/login", [requireGuest, Login]),
+
+        // Users-Only
+        route("/myPage", [requireAuth, MyPage]),
+        route("/canvas/:id", [requireAuth, Canvas]),
+
+        // Admin-Only
+        route("/admin", [requireAdmin, Admin])
     ]),
   ]),
 ]);
