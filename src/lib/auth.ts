@@ -19,6 +19,16 @@ export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   basePath: "api/v1/auth",
 
+  user: {
+    additionalFields: {
+      username: {
+        type: "string",
+        required: true,
+        unique: true,
+      },
+    },
+  },
+
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
