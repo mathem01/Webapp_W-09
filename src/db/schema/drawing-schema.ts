@@ -1,5 +1,5 @@
 import { index, integer, sqliteTable, text, type AnySQLiteColumn } from "drizzle-orm/sqlite-core";
-import { users } from "./user-schema";
+import { user } from "./auth-schema";
 import { createId } from "@/lib/id";
 
 
@@ -12,9 +12,6 @@ import { createId } from "@/lib/id";
  * `remixOfId` peker på tegningen denne er remikset fra, og er tom ellers.
  * "set null" betyr at remiksen består hvis originalen slettes, men mister
  * referansen.
- *
- * TODO: userId skal få .references(() => user.id, { onDelete: "cascade" })
- * når better-auth-tabellene er merget inn.
  */
 export const drawings = sqliteTable(
   "drawings",
@@ -25,7 +22,8 @@ export const drawings = sqliteTable(
 
     // Tekst, ikke tall: better-auth bruker tekst-id-er.
     // Fremmednøkkel legges til når brukertabellen finnes.  
-    userId: text("user_id").notNull(),
+    userId: text("user_id").notNull()
+    .references(()=>user.id, {onDelete: "cascade"}),
     title: text("title").notNull(),
     width: integer("width").notNull(),
     height: integer("height").notNull(),
