@@ -26,9 +26,9 @@ export function Register() {
           <input
             id="username"
             placeholder="FlamingHotChicken1_1"
-            name="name"
+            name="username"
             type="text"
-            autoComplete="name"
+            autoComplete="username"
             required
             className="mt-1 h-11 rounded-sm bg-neutral-200 px-3 text-neutral-900 outline-none focus:ring-2 focus:ring-white"
           />
