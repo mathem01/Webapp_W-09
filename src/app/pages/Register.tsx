@@ -20,6 +20,19 @@ export function Register() {
             className="mt-1 h-11 rounded-sm bg-neutral-200 px-3 text-neutral-900 outline-none focus:ring-2 focus:ring-white"
           />
 
+          <label htmlFor="username" className="text-sm">
+            Brukernavn
+          </label>
+          <input
+            id="username"
+            placeholder="FlamingHotChicken1_1"
+            name="name"
+            type="text"
+            autoComplete="name"
+            required
+            className="mt-1 h-11 rounded-sm bg-neutral-200 px-3 text-neutral-900 outline-none focus:ring-2 focus:ring-white"
+          />
+
           <label htmlFor="email" className="mt-6 text-sm">
             Email
           </label>
