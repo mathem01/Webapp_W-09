@@ -1,7 +1,6 @@
 import { env } from "cloudflare:workers";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
-import { admin } from "better-auth/plugins"
 
 import { db } from "@/db";
 import * as authSchema from "@/db/schema/auth-schema"
@@ -18,17 +17,6 @@ export const auth = betterAuth({
 
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
-  basePath: "api/v1/auth",
-
-  user: {
-    additionalFields: {
-      username: {
-        type: "string",
-        required: true,
-        unique: true,
-      },
-    },
-  },
 
   emailAndPassword: {
     enabled: true,
@@ -51,10 +39,6 @@ export const auth = betterAuth({
     },
     generateId: () => crypto.randomUUID(),
   },
-
-  plugins: [
-    admin(),
-  ]
 });
 
 export type AuthSession = typeof auth.$Infer.Session;
