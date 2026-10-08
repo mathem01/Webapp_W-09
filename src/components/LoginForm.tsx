@@ -45,7 +45,7 @@ return (
 
 
 <form onSubmit={onSubmit} className="mt-4 flex flex-col">
-          <label htmlFor="email" className="text-sm">
+          <label htmlFor="email" className="mt-6 text-sm">
             Email
           </label>
           <input
