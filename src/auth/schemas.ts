@@ -17,8 +17,8 @@ export const registerSchema = z.object({
     username: z
     .string()
     .trim()
-    .min(3, "navnet må ha minst 3 tegn")
-    .max(17, "navnet kan ikke ha mer en 17 tegn")
+    .min(3, "brukernavnet må ha minst 3 tegn")
+    .max(17, "brukernavnet kan ikke ha mer en 17 tegn")
     .regex(/^[a-zA-Z0-9_]+$/, "Du kan kun bruke bokstaver, tall og understrek i brukernavnet"),
     email: z.email("ikke gyldig e-postadresse"),
     password: z.string().min(PASSWORD_MIN, `passord må ha minst ${PASSWORD_MIN} tegn` )
