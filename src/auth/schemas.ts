@@ -25,7 +25,7 @@ export const registerSchema = z.object({
 
 });
 
-export function firstIssue(error: z.ZodError); {
+export function firstIssue(error: z.ZodError) {
 return error.issues[0] ? error.issues[0].message : "Ugyldig input";
 
 }
