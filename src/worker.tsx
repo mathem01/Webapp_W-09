@@ -5,6 +5,7 @@ import { Document } from "@/app/Document";
 import { setCommonHeaders } from "@/app/headers";
 import { auth } from "./lib/auth";
 import { Session, sessionMiddleware } from "./middleware/session";
+import { requireGuest, requireAuth, requireAdmin } from "./middleware/guards";
 
 import { AppLayout } from "@/app/layouts/AppLayout"
 import { Home } from "@/app/pages/Home";
@@ -35,26 +36,33 @@ const app = defineApp([
   // API-rute. Ligger UTENFOR render(), så svaret er akkurat det handleren
   // returnerer: JSON, uten HTML-skall rundt.
   
-  route("/api/auth/*", ({ request }) => 
+  route("/api/v1/auth/*", ({ request }) => 
     auth.handler(request)
   ),
 
-  route("/api/status", () =>
+  route("/api/v1/status", () =>
     Response.json({ status: "ok", version: "0.1.0" })
   ),
 
   // Sider. render(Document, [...]) pakker dem i et helt HTML-dokument.
   render(Document, [
     layout(AppLayout, [
+        // Everyone
         route("/", Home),
         route("/explore", Explore),
         route("/drawing/:id", Drawing),
-        route("/register", Register),
-        route("/login", Login),
         route("/profile/:username", Profile),
-        route("/myPage", MyPage),
-        route("/canvas/:id", Canvas),
-        route("/admin", Admin)
+
+        // Guests-Only
+        route("/register", [requireGuest, Register]),
+        route("/login", [requireGuest, Login]),
+
+        // Users-Only
+        route("/myPage", [requireAuth, MyPage]),
+        route("/canvas/:id", [requireAuth, Canvas]),
+
+        // Admin-Only
+        route("/admin", [requireAdmin, Admin])
     ]),
   ]),
 ]);
