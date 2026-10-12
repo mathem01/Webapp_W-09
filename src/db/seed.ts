@@ -6,38 +6,37 @@
 // startet. Da slipper dere å lure på om feilen ligger i dataene.
 import { defineScript } from "rwsdk/worker";
 import { drizzle } from "drizzle-orm/d1";
-//import { users, tasks } from "./schema";
+
+import { relations } from "./relations";
+import { user, drawings } from "./schema";
+import { createDrawing } from "@/lib/drawing-service";
 
 export const seedData = async (env: Env) => {
-  const db = drizzle(env.DB);
+  const db = drizzle(env.DB, { relations });
 
   // Tøm først, så seed kan kjøres om igjen uten å doble alt.
-  
-  //await db.delete(tasks);
-  //await db.delete(users);
+  await db.delete(drawings);
+  await db.delete(user);
 
-  // Brukerne må inn før oppgavene: fremmednøkkelen krever at brukeren finnes.
-  // Databasen nekter hvis dere tar rekkefølgen feil, og det er en god ting.
+  // Brukeren må inn før tegningene: fremmednøkkelen krever at den finnes.
+  await db.insert(user).values({
+    id: "seed-user-1",
+    name: "Test Testesen",
+    username: "testesen",
+    email: "test@example.com",
+  });
 
-  // const [user] = await db
-  //   .insert(users)
-  //   .values({ name: "Test Testesen", email: "test@example.com" })
-  //   .returning();
+  // Går gjennom servicen, så valideringen kjører på samme vei som i appen.
+  const liten = await createDrawing(db, "seed-user-1", {
+    title: "Rødt kryss",
+    width: 10,
+    height: 10,
+    pixels: Array.from({ length: 100 }, (_, i) =>
+      i % 11 === 0 || i % 9 === 0 ? "#ff0000" : null
+    ),
+  });
 
-  // await db.insert(tasks).values([
-  //   {
-  //     title: "Lese leksjonen før timen",
-  //     completed: true,
-  //     userId: user.id,
-  //     dueDate: new Date(Date.now() - 86_400_000),
-  //   },
-  //   {
-  //     title: "Sette opp prosjektet",
-  //     completed: false,
-  //     userId: user.id,
-  //     dueDate: new Date(Date.now() + 86_400_000),
-  //   },
-  // ]);
+  if (!liten.ok) throw new Error(`Seed feilet: ${liten.error}`);
 
   console.log("Seeding ferdig");
 };
