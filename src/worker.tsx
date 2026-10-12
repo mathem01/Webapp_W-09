@@ -1,3 +1,5 @@
+import { env } from "cloudflare:workers";
+import { seedData } from "@/db/seed";
 import { defineApp } from "rwsdk/worker";
 import { render, layout, route } from "rwsdk/router";
 import { Document } from "@/app/Document";
@@ -43,6 +45,20 @@ const app = defineApp([
   route("/api/v1/status", () =>
     Response.json({ status: "ok", version: "0.1.0" })
   ),
+    // Kjører seed gjennom utviklingsserveren. `pnpm seed` (rwsdk worker-run)
+  // rekker ikke å starte før den gir opp å vente, så dette er alternativet.
+  // Åpne http://localhost:5173/__seed
+  //
+  // import.meta.env.DEV er false i produksjonsbygget, så ruten finnes bare
+  // lokalt og kan derfor ligge i repoet.
+  ...(import.meta.env.DEV
+    ? [
+        route("/__seed", async () => {
+          await seedData(env);
+          return Response.json({ ok: true });
+        }),
+      ]
+    : []),
 
   // Sider. render(Document, [...]) pakker dem i et helt HTML-dokument.
   render(Document, [
