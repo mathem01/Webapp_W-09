@@ -11,15 +11,17 @@ export const loginSchema = z.object({
 
 });
 
+export const usernameSchema = z
+    .string()
+    .trim()
+    .min(3, "brukernavnet må ha minst 3 tegn.")
+    .max(20, "brukernavnet kan ikke ha mer en 20 tegn.") // OnlyTwentyCharacters
+    .regex(/^[a-z0-9_]+$/, "Du kan kun bruke små bokstaver, tall og understrek i brukernavnet.")
+
 export const registerSchema = z.object({
 
     name: z.string().trim().min(1, "Skriv inn et fullt navn"),
-    username: z
-    .string()
-    .trim()
-    .min(3, "brukernavnet må ha minst 3 tegn")
-    .max(22, "brukernavnet kan ikke ha mer en 22 tegn") // OnlyTwentyCharacters
-    .regex(/^[a-zA-Z0-9_]+$/, "Du kan kun bruke bokstaver, tall og understrek i brukernavnet"),
+    username: usernameSchema,
     email: z.email("ikke gyldig e-postadresse"),
     password: z.string().min(PASSWORD_MIN, `passord må ha minst ${PASSWORD_MIN} tegn` )
 

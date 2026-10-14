@@ -12,7 +12,7 @@ export interface UserService {
 export function createUserService(_repository: UserRepository): UserService {
   return {
     async findByUsername(username) {
-        const normalizedUsername = username.trim();
+        const normalizedUsername = username.trim()
 
         if (!normalizedUsername) {
             return ResultHandler.failure(
