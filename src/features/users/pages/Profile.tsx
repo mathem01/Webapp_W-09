@@ -2,6 +2,7 @@ import type { RequestInfo } from "rwsdk/worker";
 import { service } from "../user-service";
 
 import { ProfileHeader } from "../components/ProfileHeader";
+import { ProfileDrawings } from "../components/ProfileDrawings";
 
 export async function Profile({ params, request }: RequestInfo) {
     const username = params.username
@@ -51,6 +52,7 @@ export async function Profile({ params, request }: RequestInfo) {
         <main className="min-h-screen bg-gray-50 px-4 py-10">
             <article className="mx-auto max-w-5xl">
                 <ProfileHeader profile={profile} />
+                <ProfileDrawings />
             </article>
         </main>
     )
