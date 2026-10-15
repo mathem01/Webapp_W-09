@@ -1,7 +1,10 @@
 // src/app/layouts/AppLayout.tsx
 import type { LayoutProps } from "rwsdk/router";
+import { requestInfo } from "rwsdk/worker";
 
 export function AppLayout({ children }: LayoutProps) {
+  const loggedIn = requestInfo.ctx.session?.isAuthenticated ?? false;
+
   return (
     <div>
       <header>
@@ -15,8 +18,14 @@ export function AppLayout({ children }: LayoutProps) {
           <input name="S" placeholder="Søk..." className="w-full bg-transparent outline-none" />
         </form>
 
-        <a href="/register">Registrer</a>
-        <a href="/login">Logg inn</a>
+        {loggedIn ? (
+          <a href="/myPage">👤 Min profil</a>
+        ) : (
+          <>
+            <a href="/register">Registrer</a>
+            <a href="/login">Logg inn</a>
+          </>
+        )}
       </nav>
       </header>
       <div className="flex items-center justify-center bg-slate-500 py-13 font-bold text-white text-3xl">
