@@ -101,6 +101,11 @@ export type DrawingView = {
   updatedAt: Date;
 };
 
+/** Gjør en databaserad om til utadrettet form ved å pakke ut pikslene. */
+function toDrawingView(row: typeof drawings.$inferSelect): DrawingView {
+  return { ...row, pixels: deserializePixels(row.pixels) };
+}
+
 /**
  * Henter én tegning.
  *
@@ -119,8 +124,56 @@ export async function getDrawing(
     return { ok: false, error: "Tegningen finnes ikke", status: 404 };
   }
 
-  return {
-    ok: true,
-    data: { ...row, pixels: deserializePixels(row.pixels) },
-  };
+ return { ok: true, data: toDrawingView(row) };
+}
+
+/**
+ * Henter alle tegningene til én bruker, nyeste først.
+ *
+ * Brukes på profilsiden, der eieren skal se både private og offentlige.
+ */
+export async function listMyDrawings(
+  db: DB,
+  userId: string
+): Promise<Result<DrawingView[]>> {
+  const rows = await db.query.drawings.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return { ok: true, data: rows.map(toDrawingView) };
+}
+/*
+ * Henter offentlige tegninger til feeden, nyeste først.
+ *
+ * Ingen innlogging kreves. `limit` holder svaret lite når det blir mange
+ * tegninger.
+ */
+export async function listPublicDrawings(
+  db: DB,
+  limit = 20
+): Promise<Result<DrawingView[]>> {
+  const rows = await db.query.drawings.findMany({
+    where: { isPublic: true },
+    orderBy: { createdAt: "desc" },
+    limit,
+  });
+
+  return { ok: true, data: rows.map(toDrawingView) };
+}
+export async function listUserDrawings(
+  db: DB,
+  profileUserId: string,
+  viewerUserId: string | null
+): Promise<Result<DrawingView[]>> {
+  const isOwner = profileUserId === viewerUserId;
+
+  const rows = await db.query.drawings.findMany({
+    where: isOwner
+      ? { userId: profileUserId }
+      : { userId: profileUserId, isPublic: true },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return { ok: true, data: rows.map(toDrawingView) };
 }
