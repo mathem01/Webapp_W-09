@@ -86,7 +86,7 @@ export async function deleteDrawing(
   return { ok: true, data: null };
 }
 
-/** Tegningen slik API-et viser den utad. Pikslene er pakket ut av JSON. */
+/* Tegningen slik API-et viser den utad. Pikslene er pakket ut av JSON. */
 export type DrawingView = {
   id: string;
   userId: string;
@@ -101,13 +101,13 @@ export type DrawingView = {
   updatedAt: Date;
 };
 
-/** Gjør en databaserad om til utadrettet form ved å pakke ut pikslene. */
+/*Gjør en databaserad om til utadrettet form ved å pakke ut pikslene. */
 function toDrawingView(row: typeof drawings.$inferSelect): DrawingView {
   return { ...row, pixels: deserializePixels(row.pixels) };
 }
 
-/**
- * Henter én tegning.
+
+ /* Henter én tegning.
  *
  * Offentlige tegninger er åpne for alle, også gjester. Private er bare for
  * eieren, og svaret er 404 og ikke 403, så ingen får vite at en privat
@@ -127,9 +127,8 @@ export async function getDrawing(
  return { ok: true, data: toDrawingView(row) };
 }
 
-/**
+/*
  * Henter alle tegningene til én bruker, nyeste først.
- *
  * Brukes på profilsiden, der eieren skal se både private og offentlige.
  */
 export async function listMyDrawings(
@@ -145,7 +144,6 @@ export async function listMyDrawings(
 }
 /*
  * Henter offentlige tegninger til feeden, nyeste først.
- *
  * Ingen innlogging kreves. `limit` holder svaret lite når det blir mange
  * tegninger.
  */
@@ -164,7 +162,7 @@ export async function listPublicDrawings(
 export async function listUserDrawings(
   db: DB,
   profileUserId: string,
-  viewerUserId: string | null
+  viewerUserId: string | null = null
 ): Promise<Result<DrawingView[]>> {
   const isOwner = profileUserId === viewerUserId;
 
