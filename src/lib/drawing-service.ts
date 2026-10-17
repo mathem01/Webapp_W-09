@@ -2,8 +2,8 @@ import { eq } from "drizzle-orm";
 
 import type { DB } from "@/db";
 import { drawings } from "@/db/schema";
-import { drawingInputSchema } from "@/lib/drawing-validation";
-import { serializePixels } from "@/lib/drawing-pixels";
+import { drawingInputSchema, type DrawingInput } from "@/lib/drawing-validation";
+import { serializePixels, deserializePixels } from "@/lib/drawing-pixels";
 import { firstIssue } from "@/auth/schemas";
 
 export type Result<T> =
@@ -84,4 +84,43 @@ export async function deleteDrawing(
   await db.delete(drawings).where(eq(drawings.id, id));
 
   return { ok: true, data: null };
+}
+
+/** Tegningen slik API-et viser den utad. Pikslene er pakket ut av JSON. */
+export type DrawingView = {
+  id: string;
+  userId: string;
+  title: string;
+  width: number;
+  height: number;
+  pixels: DrawingInput["pixels"];
+  isPublic: boolean;
+  allowRemix: boolean;
+  remixOfId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+/**
+ * Henter én tegning.
+ *
+ * Offentlige tegninger er åpne for alle, også gjester. Private er bare for
+ * eieren, og svaret er 404 og ikke 403, så ingen får vite at en privat
+ * tegning finnes.
+ */
+export async function getDrawing(
+  db: DB,
+  id: string,
+  userId: string | null
+): Promise<Result<DrawingView>> {
+  const row = await db.query.drawings.findFirst({ where: { id } });
+
+  if (!row || (!row.isPublic && row.userId !== userId)) {
+    return { ok: false, error: "Tegningen finnes ikke", status: 404 };
+  }
+
+  return {
+    ok: true,
+    data: { ...row, pixels: deserializePixels(row.pixels) },
+  };
 }

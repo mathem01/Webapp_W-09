@@ -19,6 +19,8 @@ import { Profile } from "@/app/pages/Profile";
 import { MyPage } from "@/app/pages/MyPage";
 import { Canvas } from "@/app/pages/Canvas";
 import { Admin } from "@/app/pages/Admin";
+import { db } from "@/db";
+import { getDrawing } from "@/lib/drawing-service";
 
 /**
  * Alt som ligger på `ctx` for én forespørsel.
@@ -45,6 +47,16 @@ const app = defineApp([
   route("/api/v1/status", () =>
     Response.json({ status: "ok", version: "0.1.0" })
   ),
+
+    route("/api/v1/drawings/:id", {
+    get: async ({ params, ctx }) => {
+      const result = await getDrawing(db, params.id, ctx.session.userId);
+
+      return Response.json(result, {
+        status: result.ok ? 200 : result.status,
+      });
+    },
+  }),
     // Kjører seed gjennom utviklingsserveren. `pnpm seed` (rwsdk worker-run)
   // rekker ikke å starte før den gir opp å vente, så dette er alternativet.
   // Åpne http://localhost:5173/__seed
