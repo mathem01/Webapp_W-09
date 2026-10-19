@@ -50,6 +50,7 @@ const app = defineApp([
         // Everyone
         route("/", Home),
         route("/explore", Explore),
+        route("/drawing", Drawing),
         route("/drawing/:id", Drawing),
         route("/profile/:username", Profile),
 
