@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { listPublicDrawings } from "@/lib/drawing-service";
+import { listPublicDrawings } from "@/features/drawings/drawing-service";
 import { DrawingGrid } from "@/features/drawings/components/DrawingGrid";
 
 export async function Explore() {

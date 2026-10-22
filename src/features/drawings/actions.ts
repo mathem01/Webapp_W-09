@@ -4,7 +4,7 @@ import { ErrorResponse } from "rwsdk/worker";
 
 import { db } from "@/db";
 import { requireUser } from "@/middleware/guards";
-import * as service from "@/lib/drawing-service";
+import * as service from "@/features/drawings/drawing-service";
 
 /** Henter innlogget bruker, og smalner typen slik at userId er en string. */
 function currentUser() {

@@ -2,8 +2,8 @@ import { eq } from "drizzle-orm";
 
 import type { DB } from "@/db";
 import { drawings } from "@/db/schema";
-import { drawingInputSchema, type DrawingInput } from "@/lib/drawing-validation";
-import { serializePixels, deserializePixels } from "@/lib/drawing-pixels";
+import { drawingInputSchema, type DrawingInput } from "@/features/drawings/drawing-schema";
+import { serializePixels, deserializePixels } from "@/features/drawings/utils/pixels";
 import { firstIssue } from "@/auth/schemas";
 
 export type Result<T> =

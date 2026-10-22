@@ -1,7 +1,7 @@
 import { it, expect } from "vitest";
 import { createTestDb } from "@/test/db";
 import { seedInto } from "@/db/seed-data";
-import { listPublicDrawings, listUserDrawings } from "@/lib/drawing-service";
+import { listPublicDrawings, listUserDrawings } from "@/features/drawings/drawing-service";
 
 it("legger inn alle brukerne og tegningene uten valideringsfeil", async () => {
   const db = createTestDb();

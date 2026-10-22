@@ -1,4 +1,4 @@
-import type { DrawingInput } from "@/lib/drawing-validation";
+import type { DrawingInput } from "@/features/drawings/drawing-schema";
 
 type Props = {
   pixels: DrawingInput["pixels"];

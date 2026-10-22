@@ -8,7 +8,7 @@ import {
   listUserDrawings,
   publishDrawing,
   unpublishDrawing,
-} from "@/lib/drawing-service";
+} from "@/features/drawings/drawing-service";
 
 /* Handlingene som er lov i /:action. Ukjent navn gir 404, så URL-en ikke
    kan brukes til å prøve seg frem. */

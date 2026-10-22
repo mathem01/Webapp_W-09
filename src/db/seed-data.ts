@@ -3,8 +3,8 @@
 import { eq } from "drizzle-orm";
 
 import { drawings, user } from "./schema";
-import { createDrawing } from "@/lib/drawing-service";
-import type { DrawingInput } from "@/lib/drawing-validation";
+import { createDrawing } from "@/features/drawings/drawing-service";
+import type { DrawingInput } from "@/features/drawings/drawing-schema";
 import type { DB } from "@/db";
 
 /**
