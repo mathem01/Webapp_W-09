@@ -7,7 +7,7 @@ import {
   createDrawing,
   updateDrawing,
   deleteDrawing,
-} from "@/lib/drawing-service";
+} from "@/features/drawings/drawing-service";
 
 const ALICE = "user-alice";
 const BOB = "user-bob";

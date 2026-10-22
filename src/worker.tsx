@@ -19,6 +19,7 @@ import { Profile } from "@/app/pages/Profile";
 import { MyPage } from "@/app/pages/MyPage";
 import { Canvas } from "@/app/pages/Canvas";
 import { Admin } from "@/app/pages/Admin";
+import { drawingRoutes } from "@/features/drawings/drawing-routes";
 
 /**
  * Alt som ligger på `ctx` for én forespørsel.
@@ -45,6 +46,10 @@ const app = defineApp([
   route("/api/v1/status", () =>
     Response.json({ status: "ok", version: "0.1.0" })
   ),
+
+    ...drawingRoutes,
+    
+  
     // Kjører seed gjennom utviklingsserveren. `pnpm seed` (rwsdk worker-run)
   // rekker ikke å starte før den gir opp å vente, så dette er alternativet.
   // Åpne http://localhost:5173/__seed
