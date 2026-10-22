@@ -108,10 +108,9 @@ function toDrawingView(row: typeof drawings.$inferSelect): DrawingView {
 
 
  /* Henter én tegning.
- *
- * Offentlige tegninger er åpne for alle, også gjester. Private er bare for
- * eieren, og svaret er 404 og ikke 403, så ingen får vite at en privat
- * tegning finnes.
+  Offentlige tegninger er åpne for alle, også gjester. Private er bare for
+  eieren, og svaret er 404 og ikke 403, så ingen får vite at en privat
+  tegning finnes.
  */
 export async function getDrawing(
   db: DB,
@@ -127,9 +126,8 @@ export async function getDrawing(
  return { ok: true, data: toDrawingView(row) };
 }
 
-/*
- * Henter alle tegningene til én bruker, nyeste først.
- * Brukes på profilsiden, der eieren skal se både private og offentlige.
+/*Henter alle tegningene til én bruker, nyeste først.
+  Brukes på profilsiden, der eieren skal se både private og offentlige.
  */
 export async function listMyDrawings(
   db: DB,
@@ -142,10 +140,9 @@ export async function listMyDrawings(
 
   return { ok: true, data: rows.map(toDrawingView) };
 }
-/*
- * Henter offentlige tegninger til feeden, nyeste først.
- * Ingen innlogging kreves. `limit` holder svaret lite når det blir mange
- * tegninger.
+/* Henter offentlige tegninger til feeden, nyeste først.
+  Ingen innlogging kreves. `limit` holder svaret lite når det blir mange
+  tegninger.
  */
 export async function listPublicDrawings(
   db: DB,
@@ -174,4 +171,38 @@ export async function listUserDrawings(
   });
 
   return { ok: true, data: rows.map(toDrawingView) };
+}
+
+/* Setter om en tegning er offentlig. Felles kropp for publisering og
+   avpublisering, så eierskapssjekken bare finnes ett sted. */
+async function setPublic(
+  db: DB,
+  userId: string,
+  id: string,
+  isPublic: boolean
+): Promise<Result<null>> {
+  const existing = await db.query.drawings.findFirst({ where: { id } });
+  if (!existing) {
+    return { ok: false, error: "Tegningen finnes ikke", status: 404 };
+  }
+  if (existing.userId !== userId) {
+    return { ok: false, error: "Ikke din tegning", status: 403 };
+  }
+
+  await db
+    .update(drawings)
+    .set({ isPublic, updatedAt: new Date() })
+    .where(eq(drawings.id, id));
+
+  return { ok: true, data: null };
+}
+
+/* Gjør tegningen synlig i feeden og på profilen. */
+export async function publishDrawing(db: DB, userId: string, id: string) {
+  return setPublic(db, userId, id, true);
+}
+
+/* Tar tegningen ut av feeden igjen. Raden slettes ikke. */
+export async function unpublishDrawing(db: DB, userId: string, id: string) {
+  return setPublic(db, userId, id, false);
 }

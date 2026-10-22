@@ -27,3 +27,13 @@ export async function deleteDrawing(id: string) {
   const user = currentUser();
   return service.deleteDrawing(db, user.id, id, user.isAdmin);
 }
+
+export async function publishDrawing(id: string) {
+  const user = currentUser();
+  return service.publishDrawing(db, user.id, id);
+}
+
+export async function unpublishDrawing(id: string) {
+  const user = currentUser();
+  return service.unpublishDrawing(db, user.id, id);
+}

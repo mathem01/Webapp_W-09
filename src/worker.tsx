@@ -19,8 +19,7 @@ import { Profile } from "@/app/pages/Profile";
 import { MyPage } from "@/app/pages/MyPage";
 import { Canvas } from "@/app/pages/Canvas";
 import { Admin } from "@/app/pages/Admin";
-import { db } from "@/db";
-import { getDrawing, listMyDrawings} from "@/lib/drawing-service";
+import { drawingRoutes } from "@/features/drawings/drawing-routes";
 
 /**
  * Alt som ligger på `ctx` for én forespørsel.
@@ -48,30 +47,9 @@ const app = defineApp([
     Response.json({ status: "ok", version: "0.1.0" })
   ),
 
-  route("/api/v1/drawings", {
-    get: async ({ ctx }) => {
-      if (!ctx.session.userId) {
-        return Response.json(
-          { ok: false, error: "Du må være logget inn", status: 401 },
-          { status: 401 }
-        );
-      }
-
-      const result = await listMyDrawings(db, ctx.session.userId);
-
-      return Response.json(result, { status: 200 });
-    },
-  }),
+    ...drawingRoutes,
+    
   
-    route("/api/v1/drawings/:id", {
-    get: async ({ params, ctx }) => {
-      const result = await getDrawing(db, params.id, ctx.session.userId);
-
-      return Response.json(result, {
-        status: result.ok ? 200 : result.status,
-      });
-    },
-  }),
     // Kjører seed gjennom utviklingsserveren. `pnpm seed` (rwsdk worker-run)
   // rekker ikke å starte før den gir opp å vente, så dette er alternativet.
   // Åpne http://localhost:5173/__seed
