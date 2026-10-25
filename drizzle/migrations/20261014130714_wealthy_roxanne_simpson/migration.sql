@@ -24,6 +24,7 @@ CREATE TABLE `session` (
 	`ip_address` text,
 	`user_agent` text,
 	`user_id` text NOT NULL,
+	`impersonated_by` text,
 	CONSTRAINT `fk_session_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
 );
 --> statement-breakpoint
@@ -34,7 +35,12 @@ CREATE TABLE `user` (
 	`email_verified` integer DEFAULT false NOT NULL,
 	`image` text,
 	`created_at` integer DEFAULT (cast(unixepoch('subsecond') * 1000 as integer)) NOT NULL,
-	`updated_at` integer DEFAULT (cast(unixepoch('subsecond') * 1000 as integer)) NOT NULL
+	`updated_at` integer DEFAULT (cast(unixepoch('subsecond') * 1000 as integer)) NOT NULL,
+	`role` text,
+	`banned` integer DEFAULT false,
+	`ban_reason` text,
+	`ban_expires` integer,
+	`username` text NOT NULL UNIQUE
 );
 --> statement-breakpoint
 CREATE TABLE `verification` (
@@ -46,9 +52,6 @@ CREATE TABLE `verification` (
 	`updated_at` integer DEFAULT (cast(unixepoch('subsecond') * 1000 as integer)) NOT NULL
 );
 --> statement-breakpoint
-DROP INDEX IF EXISTS `idx_tasks_user_id`;--> statement-breakpoint
 CREATE INDEX `account_userId_idx` ON `account` (`user_id`);--> statement-breakpoint
 CREATE INDEX `session_userId_idx` ON `session` (`user_id`);--> statement-breakpoint
-CREATE INDEX `verification_identifier_idx` ON `verification` (`identifier`);--> statement-breakpoint
-DROP TABLE `users`;--> statement-breakpoint
-DROP TABLE `tasks`;
+CREATE INDEX `verification_identifier_idx` ON `verification` (`identifier`);
