@@ -19,11 +19,11 @@ export function AppLayout({ children }: LayoutProps) {
         <a href="/login">Logg inn</a>
       </nav>
       </header>
-      <div className="flex items-center justify-center bg-slate-500 py-13 font-bold text-white text-3xl">
+      {/* <div className="flex items-center justify-center bg-slate-500 py-13 font-bold text-white text-3xl">
         Utforsk de nyeste tegningene
-      </div>
+      </div> */}
       <main>{children}</main>
-      <footer><p>Kvitter, laget med RedwoodSDK</p></footer>
+      {/* <footer><p>Kvitter, laget med RedwoodSDK</p></footer> */}
     </div>
   );
 }

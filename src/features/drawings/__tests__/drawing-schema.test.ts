@@ -6,7 +6,7 @@ import {
   MIN_SIZE,
   MAX_SIZE,
   MAX_TITLE_LENGTH,
-} from "@/lib/drawing-validation";
+} from "@/features/drawings/drawing-schema";
 
 // Bygger en gyldig tegning med riktig antall piksler, så hver test bare
 // trenger å endre det ene den handler om.

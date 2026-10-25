@@ -1,13 +1,13 @@
 import { env } from "cloudflare:workers";
 import { seedData } from "@/db/seed";
 import { defineApp } from "rwsdk/worker";
-import { render, layout, route } from "rwsdk/router";
+import { render, layout, route, prefix } from "rwsdk/router";
 import { Document } from "@/app/Document";
 
 import { setCommonHeaders } from "@/app/headers";
-import { auth } from "./lib/auth";
-import { Session, sessionMiddleware } from "./middleware/session";
-import { requireGuest, requireAuth, requireAdmin } from "./middleware/guards";
+import { auth } from "@/lib/auth";
+import { Session, sessionMiddleware } from "@/middleware/session";
+import { requireGuest, requireAuth, requireAdmin } from "@/middleware/guards";
 
 import { AppLayout } from "@/app/layouts/AppLayout"
 import { Home } from "@/app/pages/Home";
@@ -15,10 +15,12 @@ import { Explore } from "@/app/pages/Explore";
 import { Drawing } from "@/app/pages/Drawing";
 import { Register } from "@/app/pages/Register";
 import { Login } from "@/app/pages/Login";
-import { Profile } from "@/app/pages/Profile";
+import { Profile } from "@/features/users/pages/Profile";
+import { userRoutes } from "@/features/users/user-routes";
 import { MyPage } from "@/app/pages/MyPage";
 import { Canvas } from "@/app/pages/Canvas";
 import { Admin } from "@/app/pages/Admin";
+import { drawingRoutes } from "@/features/drawings/drawing-routes";
 
 /**
  * Alt som ligger på `ctx` for én forespørsel.
@@ -37,14 +39,20 @@ const app = defineApp([
 
   // API-rute. Ligger UTENFOR render(), så svaret er akkurat det handleren
   // returnerer: JSON, uten HTML-skall rundt.
-  
+
   route("/api/v1/auth/*", ({ request }) => 
     auth.handler(request)
   ),
 
+  ...userRoutes,
+
   route("/api/v1/status", () =>
     Response.json({ status: "ok", version: "0.1.0" })
   ),
+
+    ...drawingRoutes,
+    
+  
     // Kjører seed gjennom utviklingsserveren. `pnpm seed` (rwsdk worker-run)
   // rekker ikke å starte før den gir opp å vente, så dette er alternativet.
   // Åpne http://localhost:5173/__seed
