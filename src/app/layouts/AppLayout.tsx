@@ -1,7 +1,10 @@
 // src/app/layouts/AppLayout.tsx
-import type { LayoutProps } from "rwsdk/router";
 
-export function AppLayout({ children }: LayoutProps) {
+import type { LayoutProps } from "rwsdk/router";
+import { LogoutButton } from "@/components/LogoutButton";
+
+export function AppLayout({ children, requestInfo }: LayoutProps) {
+ const isAuthenticated = requestInfo?.ctx.session.isAuthenticated;
   return (
     <div>
       <header>
@@ -14,9 +17,16 @@ export function AppLayout({ children }: LayoutProps) {
           🔍︎
           <input name="S" placeholder="Søk..." className="w-full bg-transparent outline-none" />
         </form>
-
+      {isAuthenticated ? (
+        <LogoutButton />
+        ) : (
+          <>
         <a href="/register">Registrer</a>
         <a href="/login">Logg inn</a>
+      </>
+        )}
+        
+        
       </nav>
       </header>
       {/* <div className="flex items-center justify-center bg-slate-500 py-13 font-bold text-white text-3xl">
