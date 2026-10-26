@@ -1,4 +1,4 @@
-import type { DrawingView } from "@/features/drawings/drawing-service";
+import type { DrawingView } from "@/features/drawings/drawing-types";
 import { PixelPreview } from "./PixelPreview";
 
 type Props = {
