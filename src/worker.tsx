@@ -45,12 +45,11 @@ const app = defineApp([
   ),
 
   ...userRoutes,
+  ...drawingRoutes,
 
   route("/api/v1/status", () =>
     Response.json({ status: "ok", version: "0.1.0" })
   ),
-
-    ...drawingRoutes,
     
   
     // Kjører seed gjennom utviklingsserveren. `pnpm seed` (rwsdk worker-run)

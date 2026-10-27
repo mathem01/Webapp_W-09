@@ -1,9 +1,8 @@
-import { db } from "@/db";
-import { listPublicDrawings } from "@/features/drawings/drawing-service";
 import { DrawingGrid } from "@/features/drawings/components/DrawingGrid";
+import { service } from "@/features/drawings/drawing-service";
 
 export async function Explore() {
-  const result = await listPublicDrawings(db);
+  const result = await service.listPublicDrawings(20);
 
   if (!result.ok) {
     return <p className="p-5">Kunne ikke hente tegninger.</p>;
