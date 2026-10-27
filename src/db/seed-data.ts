@@ -3,7 +3,7 @@
 import { eq } from "drizzle-orm";
 
 import { drawings, user } from "./schema";
-import { createDrawing } from "@/features/drawings/drawing-service";
+import { service } from "@/features/drawings/drawing-service";
 import type { DrawingInput } from "@/features/drawings/drawing-schema";
 import type { DB } from "@/db";
 
@@ -231,7 +231,7 @@ export async function seedInto(db: DB) {
 
   for (const { userId, title, isPublic, width, height, pixels } of SEED_DRAWINGS) {
     // Går gjennom servicen, så valideringen kjører samme vei som i appen.
-    const result = await createDrawing(db, userId, { title, width, height, pixels });
+    const result = await service.createDrawing(userId, { title, width, height, pixels });
 
     if (!result.ok) {
       throw new Error(`Seed feilet på "${title}": ${result.error}`);

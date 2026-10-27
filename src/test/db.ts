@@ -22,8 +22,10 @@ export function createTestDb(): DB {
 
   for (const dir of readdirSync(MIGRATIONS_DIR).sort()) {
     const sql = readFileSync(join(MIGRATIONS_DIR, dir, "migration.sql"), "utf8");
+
     for (const statement of sql.split("--> statement-breakpoint")) {
       const trimmed = statement.trim();
+      
       if (trimmed) sqlite.exec(trimmed);
     }
   }
