@@ -1,18 +1,19 @@
-import { describe, it, expect, beforeEach } from "vitest";
-
-import { user } from "@/db/schema";
+import { beforeEach, describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
+import { user, drawings } from "@/db/schema";
 import { createTestDb } from "@/test/db";
 import type { DB } from "@/db";
 import {
-  createDrawing,
-  updateDrawing,
-  deleteDrawing,
-} from "@/features/drawings/drawing-service";
+  createDrawingService,
+  type DrawingService,
+} from "../drawing-service";
+import { createDrawingRepository } from "../drawing-repository";
 
 const ALICE = "user-alice";
 const BOB = "user-bob";
 
 let db: DB;
+let service: DrawingService;
 
 function drawing(overrides = {}) {
   return {
@@ -24,141 +25,538 @@ function drawing(overrides = {}) {
   };
 }
 
-// Fersk database og to brukere før hver test, så testene ikke påvirker
-// hverandre.
+async function findDrawing(id: string) {
+  const [row] = await db
+    .select()
+    .from(drawings)
+    .where(eq(drawings.id, id))
+    .limit(1);
+
+  return row;
+}
+
 beforeEach(async () => {
   db = createTestDb();
+
   await db.insert(user).values([
-    { id: ALICE, name: "Alice", username: "alice", email: "alice@example.com" },
-    { id: BOB, name: "Bob", username: "bob", email: "bob@example.com" },
+    {
+      id: ALICE,
+      name: "Alice",
+      username: "alice",
+      email: "alice@example.com",
+    },
+    {
+      id: BOB,
+      name: "Bob",
+      username: "bob",
+      email: "bob@example.com",
+    },
   ]);
+
+  service = createDrawingService(
+    createDrawingRepository(db)
+  );
 });
 
-describe("hovedflyt", () => {
-  it("lager en tegning og finner den igjen", async () => {
-    const created = await createDrawing(db, ALICE, drawing());
-    expect(created.ok).toBe(true);
-    if (!created.ok) return;
+describe("drawingService.createDrawing", () => {
+  it("lager en tegning og lagrer riktig eier", async () => {
+    const result = await service.createDrawing(ALICE, drawing());
 
-    const row = await db.query.drawings.findFirst({
-      where: { id: created.data.id },
-    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const row = await findDrawing(result.data.id);
+
     expect(row?.userId).toBe(ALICE);
     expect(row?.title).toBe("Min tegning");
   });
 
-  it("er privat som standard", async () => {
-    const created = await createDrawing(db, ALICE, drawing());
-    if (!created.ok) throw new Error("kunne ikke lage tegning");
+  it("oppretter private tegninger som standard", async () => {
+    const result = await service.createDrawing(ALICE, drawing());
 
-    const row = await db.query.drawings.findFirst({
-      where: { id: created.data.id },
-    });
+    if (!result.ok) {
+      throw new Error("Kunne ikke opprette tegning");
+    }
+
+    const row = await findDrawing(result.data.id);
+
     expect(row?.isPublic).toBe(false);
   });
-});
 
-describe("autorisasjon", () => {
-  it("Bob kan ikke endre Alice sin tegning", async () => {
-    const created = await createDrawing(db, ALICE, drawing());
-    if (!created.ok) throw new Error("kunne ikke lage tegning");
-
-    const result = await updateDrawing(
-      db,
-      BOB,
-      created.data.id,
-      drawing({ title: "Hacket" })
-    );
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.status).toBe(403);
-
-    // Og tittelen er faktisk uendret i databasen.
-    const row = await db.query.drawings.findFirst({
-      where: { id: created.data.id },
-    });
-    expect(row?.title).toBe("Min tegning");
-  });
-
-  it("Bob kan ikke slette Alice sin tegning", async () => {
-    const created = await createDrawing(db, ALICE, drawing());
-    if (!created.ok) throw new Error("kunne ikke lage tegning");
-
-    const result = await deleteDrawing(db, BOB, created.data.id);
-
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.status).toBe(403);
-
-    const row = await db.query.drawings.findFirst({
-      where: { id: created.data.id },
-    });
-    expect(row).toBeTruthy();
-  });
-
-  it("Alice kan endre sin egen", async () => {
-    const created = await createDrawing(db, ALICE, drawing());
-    if (!created.ok) throw new Error("kunne ikke lage tegning");
-
-    const result = await updateDrawing(
-      db,
+  it("avviser ugyldige data", async () => {
+    const result = await service.createDrawing(
       ALICE,
-      created.data.id,
-      drawing({ title: "Nytt navn" })
-    );
-    expect(result.ok).toBe(true);
-
-    const row = await db.query.drawings.findFirst({
-      where: { id: created.data.id },
-    });
-    expect(row?.title).toBe("Nytt navn");
-  });
-
-  it("admin kan slette andres tegning", async () => {
-    const created = await createDrawing(db, ALICE, drawing());
-    if (!created.ok) throw new Error("kunne ikke lage tegning");
-
-    const result = await deleteDrawing(db, BOB, created.data.id, true);
-    expect(result.ok).toBe(true);
-
-    const row = await db.query.drawings.findFirst({
-      where: { id: created.data.id },
-    });
-    expect(row).toBeFalsy();
-  });
-
-  it("gir 404 for en tegning som ikke finnes", async () => {
-    const result = await deleteDrawing(db, ALICE, "finnes-ikke");
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.status).toBe(404);
-  });
-  it("avviser ugyldige data ved oppdatering med 400", async () => {
-    const created = await createDrawing(db, ALICE, drawing());
-    if (!created.ok) throw new Error("kunne ikke lage tegning");
-
-    const result = await updateDrawing(
-      db,
-      ALICE,
-      created.data.id,
       drawing({ title: "" })
     );
 
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.status).toBe(400);
-  });
-});
 
-describe("validering gjennom servicen", () => {
-  it("avviser ugyldige data med 400", async () => {
-    const result = await createDrawing(db, ALICE, drawing({ title: "" }));
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.status).toBe(400);
+    if (!result.ok) {
+      expect(result.error.code).toBe("BAD_REQUEST");
+      expect(result.error.fieldErrors?.title).toBeDefined();
+    }
   });
 
   it("lagrer ingenting når data er ugyldige", async () => {
-    await createDrawing(db, ALICE, drawing({ width: 9999 }));
+    const result = await service.createDrawing(
+      ALICE,
+      drawing({ width: 9999 })
+    );
 
-    const rows = await db.query.drawings.findMany();
+    expect(result.ok).toBe(false);
+
+    const rows = await db
+      .select()
+      .from(drawings);
+
     expect(rows).toHaveLength(0);
+  });
+});
+
+describe("drawingService.getDrawing", () => {
+  it("lar eieren hente sin private tegning", async () => {
+    const created = await service.createDrawing(ALICE, drawing());
+
+    if (!created.ok) {
+      throw new Error("Kunne ikke opprette tegning");
+    }
+
+    const result = await service.getDrawing(created.data.id, ALICE);
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data.title).toBe("Min tegning");
+    }
+  });
+
+  it("skjuler private tegninger for andre brukere", async () => {
+    const created = await service.createDrawing(ALICE, drawing());
+
+    if (!created.ok) {
+      throw new Error("Kunne ikke opprette tegning");
+    }
+
+    const result = await service.getDrawing(created.data.id, BOB);
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.error.code).toBe("NOT_FOUND");
+    }
+  });
+
+  it("skjuler private tegninger for gjester", async () => {
+    const created = await service.createDrawing(ALICE, drawing());
+
+    if (!created.ok) {
+      throw new Error("Kunne ikke opprette tegning");
+    }
+
+    const result = await service.getDrawing(created.data.id, null);
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.error.code).toBe("NOT_FOUND");
+    }
+  });
+
+  it("lar gjester hente offentlige tegninger", async () => {
+    const created = await service.createDrawing(ALICE, drawing());
+
+    if (!created.ok) {
+      throw new Error("Kunne ikke opprette tegning");
+    }
+
+    const visibility = await service.setDrawingVisibility(
+      created.data.id,
+      ALICE,
+      true
+    );
+
+    expect(visibility.ok).toBe(true);
+
+    const result = await service.getDrawing(created.data.id, null);
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data.title).toBe("Min tegning");
+    }
+  });
+
+  it("returnerer NOT_FOUND for en ukjent tegning", async () => {
+    const result = await service.getDrawing("finnes-ikke", ALICE);
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.error.code).toBe("NOT_FOUND");
+    }
+  });
+});
+
+describe("drawingService.updateDrawing", () => {
+  it("lar Alice oppdatere sin egen tegning", async () => {
+    const created = await service.createDrawing(ALICE, drawing());
+
+    if (!created.ok) {
+      throw new Error("Kunne ikke opprette tegning");
+    }
+
+    const result = await service.updateDrawing(
+      created.data.id,
+      ALICE,
+      drawing({ title: "Nytt navn" })
+    );
+
+    expect(result.ok).toBe(true);
+
+    const row = await findDrawing(created.data.id);
+
+    expect(row?.title).toBe("Nytt navn");
+  });
+
+  it("hindrer Bob i å oppdatere Alice sin tegning", async () => {
+    const created = await service.createDrawing(ALICE, drawing());
+
+    if (!created.ok) {
+      throw new Error("Kunne ikke opprette tegning");
+    }
+
+    const result = await service.updateDrawing(
+      created.data.id,
+      BOB,
+      drawing({ title: "Hacket" })
+    );
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.error.code).toBe("NOT_FOUND");
+    }
+
+    const row = await findDrawing(created.data.id);
+
+    expect(row?.title).toBe("Min tegning");
+  });
+
+  it("returnerer NOT_FOUND når tegningen ikke finnes", async () => {
+    const result = await service.updateDrawing(
+      "finnes-ikke",
+      ALICE,
+      drawing()
+    );
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.error.code).toBe("NOT_FOUND");
+    }
+  });
+
+  it("avviser ugyldige data ved oppdatering", async () => {
+    const created = await service.createDrawing(ALICE, drawing());
+
+    if (!created.ok) {
+      throw new Error("Kunne ikke opprette tegning");
+    }
+
+    const result = await service.updateDrawing(
+      created.data.id,
+      ALICE,
+      drawing({ title: "" })
+    );
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.error.code).toBe("BAD_REQUEST");
+      expect(result.error.fieldErrors?.title).toBeDefined();
+    }
+
+    const row = await db.query.drawings.findFirst({
+      where: { id: created.data.id },
+    });
+
+    expect(row?.title).toBe("Min tegning");
+  });
+});
+
+describe("drawingService.deleteDrawing", () => {
+  it("lar Alice slette sin egen tegning", async () => {
+    const created = await service.createDrawing(ALICE, drawing());
+
+    if (!created.ok) {
+      throw new Error("Kunne ikke opprette tegning");
+    }
+
+    const result = await service.deleteDrawing(
+      created.data.id,
+      ALICE
+    );
+
+    expect(result.ok).toBe(true);
+
+    const row = await findDrawing(created.data.id);
+
+    expect(row).toBeUndefined();
+  });
+
+  it("hindrer Bob i å slette Alice sin tegning", async () => {
+    const created = await service.createDrawing(ALICE, drawing());
+
+    if (!created.ok) {
+      throw new Error("Kunne ikke opprette tegning");
+    }
+
+    const result = await service.deleteDrawing(
+      created.data.id,
+      BOB
+    );
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.error.code).toBe("NOT_FOUND");
+    }
+
+    const row = await findDrawing(created.data.id);
+
+    expect(row).toBeDefined();
+  });
+
+  it("returnerer NOT_FOUND når tegningen ikke finnes", async () => {
+    const result = await service.deleteDrawing(
+      "finnes-ikke",
+      ALICE
+    );
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.error.code).toBe("NOT_FOUND");
+    }
+  });
+});
+
+describe("drawingService.setDrawingVisibility", () => {
+  it("lar eieren gjøre en tegning offentlig", async () => {
+    const created = await service.createDrawing(ALICE, drawing());
+
+    if (!created.ok) {
+      throw new Error("Kunne ikke opprette tegning");
+    }
+
+    const result = await service.setDrawingVisibility(
+      created.data.id,
+      ALICE,
+      true
+    );
+
+    expect(result.ok).toBe(true);
+
+    const row = await findDrawing(created.data.id);
+
+    expect(row?.isPublic).toBe(true);
+  });
+
+  it("hindrer andre brukere i å endre synlighet", async () => {
+    const created = await service.createDrawing(ALICE, drawing());
+
+    if (!created.ok) {
+      throw new Error("Kunne ikke opprette tegning");
+    }
+
+    const result = await service.setDrawingVisibility(
+      created.data.id,
+      BOB,
+      true
+    );
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.error.code).toBe("NOT_FOUND");
+    }
+
+    const row = await findDrawing(created.data.id);
+
+    expect(row?.isPublic).toBe(false);
+  });
+
+  it("returnerer NOT_FOUND når tegningen ikke finnes", async () => {
+    const result = await service.setDrawingVisibility(
+      "finnes-ikke",
+      ALICE,
+      true
+    );
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.error.code).toBe("NOT_FOUND");
+    }
+  });
+});
+
+describe("drawingService.listPublicDrawings", () => {
+  it("lister bare offentlige tegninger", async () => {
+    const publicDrawing = await service.createDrawing(
+      ALICE,
+      drawing({ title: "Offentlig" })
+    );
+
+    const privateDrawing = await service.createDrawing(
+      ALICE,
+      drawing({ title: "Privat" })
+    );
+
+    if (!publicDrawing.ok || !privateDrawing.ok) {
+      throw new Error("Kunne ikke opprette tegninger");
+    }
+
+    await service.setDrawingVisibility(
+      publicDrawing.data.id,
+      ALICE,
+      true
+    );
+
+    const result = await service.listPublicDrawings(10);
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data.map((item) => item.title)).toEqual([
+        "Offentlig",
+      ]);
+    }
+  });
+
+  it("begrenser antallet tegninger til 20", async () => {
+    for (let i = 0; i < 25; i++) {
+      const created = await service.createDrawing(
+        ALICE,
+        drawing({ title: `Tegning ${i}` })
+      );
+
+      if (!created.ok) {
+        throw new Error("Kunne ikke opprette tegning");
+      }
+
+      await service.setDrawingVisibility(
+        created.data.id,
+        ALICE,
+        true
+      );
+    }
+
+    const result = await service.listPublicDrawings(100);
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data).toHaveLength(20);
+    }
+  });
+});
+
+describe("drawingService.listPublicDrawingsByUser", () => {
+  it("viser bare brukerens offentlige tegninger", async () => {
+    const alicePublic = await service.createDrawing(
+      ALICE,
+      drawing({ title: "Alice offentlig" })
+    );
+
+    const alicePrivate = await service.createDrawing(
+      ALICE,
+      drawing({ title: "Alice privat" })
+    );
+
+    const bobPublic = await service.createDrawing(
+      BOB,
+      drawing({ title: "Bob offentlig" })
+    );
+
+    if (
+      !alicePublic.ok ||
+      !alicePrivate.ok ||
+      !bobPublic.ok
+    ) {
+      throw new Error("Kunne ikke opprette tegninger");
+    }
+
+    await service.setDrawingVisibility(
+      alicePublic.data.id,
+      ALICE,
+      true
+    );
+
+    await service.setDrawingVisibility(
+      bobPublic.data.id,
+      BOB,
+      true
+    );
+
+    const result = await service.listPublicDrawingsByUser(ALICE);
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data.map((item) => item.title)).toEqual([
+        "Alice offentlig",
+      ]);
+    }
+  });
+});
+
+describe("drawingService.listAllDrawingsByUser", () => {
+  it("viser både offentlige og private tegninger for eieren", async () => {
+    const publicDrawing = await service.createDrawing(
+      ALICE,
+      drawing({ title: "Offentlig" })
+    );
+
+    const privateDrawing = await service.createDrawing(
+      ALICE,
+      drawing({ title: "Privat" })
+    );
+
+    if (!publicDrawing.ok || !privateDrawing.ok) {
+      throw new Error("Kunne ikke opprette tegninger");
+    }
+
+    await service.setDrawingVisibility(
+      publicDrawing.data.id,
+      ALICE,
+      true
+    );
+
+    const result = await service.listAllDrawingsByUser(ALICE);
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data.map((item) => item.title).sort()).toEqual([
+        "Offentlig",
+        "Privat",
+      ]);
+    }
+  });
+
+  it("viser ikke tegninger som tilhører andre brukere", async () => {
+    await service.createDrawing(ALICE, drawing({ title: "Alice" }));
+    await service.createDrawing(BOB, drawing({ title: "Bob" }));
+
+    const result = await service.listAllDrawingsByUser(ALICE);
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data.map((item) => item.title)).toEqual([
+        "Alice",
+      ]);
+    }
   });
 });

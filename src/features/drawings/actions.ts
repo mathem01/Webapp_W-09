@@ -2,9 +2,8 @@
 
 import { ErrorResponse } from "rwsdk/worker";
 
-import { db } from "@/db";
 import { requireUser } from "@/middleware/guards";
-import * as service from "@/features/drawings/drawing-service";
+import { service } from "@/features/drawings/drawing-service";
 
 /** Henter innlogget bruker, og smalner typen slik at userId er en string. */
 function currentUser() {
@@ -15,25 +14,25 @@ function currentUser() {
 
 export async function createDrawing(input: unknown) {
   const user = currentUser();
-  return service.createDrawing(db, user.id, input);
+  return service.createDrawing(user.id, input);
 }
 
 export async function updateDrawing(id: string, input: unknown) {
   const user = currentUser();
-  return service.updateDrawing(db, user.id, id, input);
+  return service.updateDrawing(id, user.id, input);
 }
 
 export async function deleteDrawing(id: string) {
   const user = currentUser();
-  return service.deleteDrawing(db, user.id, id, user.isAdmin);
+  return service.deleteDrawing(id, user.id);
 }
 
 export async function publishDrawing(id: string) {
   const user = currentUser();
-  return service.publishDrawing(db, user.id, id);
+  return service.setDrawingVisibility(id, user.id, true);
 }
 
 export async function unpublishDrawing(id: string) {
   const user = currentUser();
-  return service.unpublishDrawing(db, user.id, id);
+  return service.setDrawingVisibility(id, user.id, false);
 }

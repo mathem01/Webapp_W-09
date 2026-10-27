@@ -27,3 +27,7 @@ export const drawingInputSchema = z
   });
 
 export type DrawingInput = z.infer<typeof drawingInputSchema>;
+
+export const drawingVisibilitySchema = z.object({
+  isPublic: z.boolean(),
+});
