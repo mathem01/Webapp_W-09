@@ -10,14 +10,14 @@ import { DrawingView } from "./drawing-types";
 export interface DrawingRepository {
     createDrawing(userId: string, drawingInput: DrawingInput): Promise<Result<{ id: string }>>;
     getDrawing(id: string): Promise<Result<Drawing | null>>
-    updateDrawing(id: string, userId: string, drawingInput: DrawingInput): Promise<Result<void>>
-    deleteDrawing(id: string, userId: string): Promise<Result<void>>
+    updateDrawing(id: string, userId: string, drawingInput: DrawingInput): Promise<Result<{ id: string } | null>>
+    deleteDrawing(id: string, userId: string): Promise<Result<boolean>>
 
     listPublicDrawings(limit: number): Promise<Result<DrawingView[]>>
     listPublicDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
     listAllDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
 
-    setDrawingVisibility(id: string, userId: string, visibility: boolean): Promise<Result<void>>
+    setDrawingVisibility(id: string, userId: string, visibility: boolean): Promise<Result<{ id: string } | null>>
 }
 
 export function createDrawingRepository(_db: DB): DrawingRepository {
@@ -51,7 +51,7 @@ export function createDrawingRepository(_db: DB): DrawingRepository {
         },
         async updateDrawing(id: string, userId: string, drawingInput: DrawingInput) {
             return executeDbOperation(async () => {
-                await _db
+                const [row] = await _db
                     .update(drawings)
                     .set({
                         title: drawingInput.title,
@@ -66,12 +66,14 @@ export function createDrawingRepository(_db: DB): DrawingRepository {
                             eq(drawings.userId, userId)
                         )
                     )
-                    .limit(1)
+                    .returning({ id: drawings.id })
+
+                return row ?? null
             })
         },
         async deleteDrawing(id: string, userId: string) {
             return executeDbOperation(async () => {
-                await _db
+                const rows = await _db
                     .delete(drawings)
                     .where(
                         and(
@@ -79,7 +81,9 @@ export function createDrawingRepository(_db: DB): DrawingRepository {
                             eq(drawings.userId, userId)
                         )
                     )
-                    .limit(1)
+                    .returning({ id: drawings.id });
+                
+                return rows.length > 0
             })
         },
         async listPublicDrawings(limit: number) {
@@ -123,7 +127,7 @@ export function createDrawingRepository(_db: DB): DrawingRepository {
         },
         async setDrawingVisibility(id: string, userId: string, visibility: boolean) {
             return executeDbOperation(async () => {
-                await _db
+                const [row] = await _db
                     .update(drawings)
                     .set({ isPublic: visibility, updatedAt: new Date() })
                     .where(
@@ -132,8 +136,10 @@ export function createDrawingRepository(_db: DB): DrawingRepository {
                             eq(drawings.userId, userId)
                         )
                     )
-                }   
-            )
+                    .returning({ id: drawings.id })
+                
+                return row ?? null
+            })
         },
     };
 }

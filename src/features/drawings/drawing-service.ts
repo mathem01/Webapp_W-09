@@ -1,10 +1,8 @@
-import { eq } from "drizzle-orm";
 import { Errors, ResultHandler, type Result } from "@/lib/result";
-import type { DB } from "@/db";
-import { drawings } from "@/db/schema";
-import { drawingInputSchema, type DrawingInput } from "@/features/drawings/drawing-schema";
+import { drawingInputSchema, drawingVisibilitySchema, type DrawingInput } from "@/features/drawings/drawing-schema";
 import { serializePixels, deserializePixels } from "@/features/drawings/utils/pixels";
 import { firstIssue } from "@/auth/schemas";
+import {z} from "zod"; 
 import { DrawingView } from "./drawing-types";
 import { DrawingRepository, repository } from "./drawing-repository";
 import { toDrawingView } from "./drawing-mapper";
@@ -19,7 +17,7 @@ export interface DrawingService {
   listPublicDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
   listAllDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
 
-  setDrawingVisibility(id: string, userId: string, visibility: boolean): Promise<Result<void>>
+  setDrawingVisibility(id: string, userId: string, input: unknown): Promise<Result<void>>
 }
 
 export function createDrawingService(_repository: DrawingRepository): DrawingService {
@@ -27,14 +25,11 @@ export function createDrawingService(_repository: DrawingRepository): DrawingSer
     async createDrawing(userId: string, input: unknown): Promise<Result<{ id: string; }>> {
       const parsed = drawingInputSchema.safeParse(input);
 
-      // if (!parsed.success) {
-      //   return { ok: false, error: firstIssue(parsed.error), status: 400 };
-      // }
-
       if (!parsed.success) {
         return ResultHandler.failure(
           "Ugyldig format",
           Errors.BAD_REQUEST,
+          z.flattenError(parsed.error).fieldErrors
         )
       }
 
@@ -55,11 +50,6 @@ export function createDrawingService(_repository: DrawingRepository): DrawingSer
         result.data
       )
     },
-     /* Henter én tegning.
-      Offentlige tegninger er åpne for alle, også gjester. Private er bare for
-      eieren, og svaret er 404 og ikke 403, så ingen får vite at en privat
-      tegning finnes.
-    */
     async getDrawing(id: string, userId: string | null): Promise<Result<DrawingView>> {
       const result = await _repository.getDrawing(id)
 
@@ -75,55 +65,43 @@ export function createDrawingService(_repository: DrawingRepository): DrawingSer
       )
     },
     async updateDrawing(id: string, userId: string, input: unknown): Promise<Result<void>> {
-      // const existing = await db.query.drawings.findFirst({ where: { id } });
-      // if (!existing) {
-      //   return { ok: false, error: "Tegningen finnes ikke", status: 404 };
-      // }
-
-      // if (existing.userId !== userId) {
-      //   return { ok: false, error: "Ikke din tegning", status: 403 };
-      // }
-
       const parsed = drawingInputSchema.safeParse(input);
       if (!parsed.success) {
         return ResultHandler.failure(
           "Ugyldig format",
           Errors.BAD_REQUEST,
+          z.flattenError(parsed.error).fieldErrors
         )
       }
 
       const result = await _repository.updateDrawing(id, userId, parsed.data)
 
-      if (!result.ok) {
+      if (!result.ok) return result
+
+      if (!result.data) {
         return ResultHandler.failure(
-          "Redigering mislykket",
-          Errors.INTERNAL_SERVER_ERROR
+          "Tegningen finnes ikke",
+          Errors.NOT_FOUND
         )
       }
 
       return ResultHandler.success(undefined)
     },
     async deleteDrawing(id: string, userId: string): Promise<Result<void>> {
-      // const existing = await db.query.drawings.findFirst({ where: { id } });
-      // if (!existing) {
-      //   return { ok: false, error: "Tegningen finnes ikke", status: 404 };
-      // }
-      // if (existing.userId !== userId && !isAdmin) {
-      //   return { ok: false, error: "Ikke din tegning", status: 403 };
-      // }
+      const drawingExist = await _repository.getDrawing(id)
 
-      // await db.delete(drawings).where(eq(drawings.id, id));
+      if (!drawingExist.ok) return drawingExist
 
-      // return { ok: true, data: null };
+      if (!drawingExist.data || (drawingExist.data.userId !== userId)) {
+        return ResultHandler.failure(
+          "Tegningen finnes ikke",
+          Errors.NOT_FOUND
+        )
+      }
 
       const result = await _repository.deleteDrawing(id, userId)
 
-      if (!result.ok) {
-        return ResultHandler.failure(
-          "Sletting mislykket",
-          Errors.INTERNAL_SERVER_ERROR
-        )
-      }
+      if (!result.ok) return result
 
       return ResultHandler.success(undefined)
     },
@@ -137,46 +115,42 @@ export function createDrawingService(_repository: DrawingRepository): DrawingSer
 
       const result = await _repository.listPublicDrawings(limit)
 
-      if (!result.ok) {
-        return ResultHandler.failure(
-          "Henting av tegninger mislykket",
-          Errors.INTERNAL_SERVER_ERROR
-        )
-      }
+      if (!result.ok) return result
       
       return ResultHandler.success(result.data)
     },
     async listPublicDrawingsByUser(userId: string): Promise<Result<DrawingView[]>> {
       const result = await _repository.listPublicDrawingsByUser(userId)
 
-      if (!result.ok) {
-        return ResultHandler.failure(
-          "Henting av tegninger mislykket",
-          Errors.INTERNAL_SERVER_ERROR
-        )
-      }
+      if (!result.ok) return result
       
       return ResultHandler.success(result.data)
     },
     async listAllDrawingsByUser(userId: string): Promise<Result<DrawingView[]>> {
       const result = await _repository.listAllDrawingsByUser(userId)
 
-      if (!result.ok) {
-        return ResultHandler.failure(
-          "Henting av tegninger mislykket",
-          Errors.INTERNAL_SERVER_ERROR
-        )
-      }
+      if (!result.ok) return result
       
       return ResultHandler.success(result.data)
     },
-    async setDrawingVisibility(id: string, userId: string, visibility: boolean): Promise<Result<void>> {
-      const result = await _repository.setDrawingVisibility(id, userId, visibility)
-
-      if (!result.ok) {
+    async setDrawingVisibility(id: string, userId: string, input: unknown): Promise<Result<void>> {
+      const parsed = drawingVisibilitySchema.safeParse(input);
+      if (!parsed.success) {
         return ResultHandler.failure(
-          "Endring av synlighet mislykket",
-          Errors.INTERNAL_SERVER_ERROR
+          "Ugyldig format",
+          Errors.BAD_REQUEST,
+          z.flattenError(parsed.error).fieldErrors
+        )
+      }
+
+      const result = await _repository.setDrawingVisibility(id, userId, parsed.data.isPublic)
+
+      if (!result.ok) return result
+
+      if (!result.data) {
+        return ResultHandler.failure(
+          "Tegningen finnes ikke",
+          Errors.NOT_FOUND
         )
       }
 

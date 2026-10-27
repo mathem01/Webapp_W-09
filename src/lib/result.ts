@@ -46,3 +46,27 @@ export async function executeDbOperation<T>(
     return ResultHandler.failure("Noe gikk galt i databasen");
   }
 }
+
+export function toResponse<T>(
+  result: Result<T>,
+  successStatus = 200
+): Response {
+  return Response.json(result, {
+    status: result.ok
+      ? successStatus
+      : ErrorHttpStatus[result.error.code],
+  });
+}
+
+export async function parseJson(
+  request: Request
+): Promise<Result<unknown>> {
+  try {
+    return ResultHandler.success(await request.json());
+  } catch {
+    return ResultHandler.failure(
+      "Body må være gyldig JSON",
+      Errors.BAD_REQUEST
+    );
+  }
+}
