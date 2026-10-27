@@ -1,30 +1,65 @@
+import type { RequestInfo } from "rwsdk/worker";
 
+export function MyPage({ ctx }: RequestInfo) {
+  const { username, email } = ctx.session;
 
-export function MyPage() {
-    return (
-        <section className="bg-neutral-2000 p-3">
-      <div className="flex min-h-[40rem] justify-between bg-neutral-300 p-5">
-        <div className="w-50">
-          <div className="aspect-[4/3] rounded-md bg-neutral-200" />
-          <div className="flex items-center justify-between rounded-b-md bg-neutral-400 px-3 py-1.5 text-sm text-white">
-            <span>tegning</span>
-            <a
-              href="/canvas/1"
-              className="rounded bg-neutral-200 px-3 py-0.5 text-neutral-900 transition hover:bg-neutral-100">
-              Åpne
-            </a>
+  const initial = username?.charAt(0).toUpperCase() || "?";
+
+  return (
+    <section className="min-h-[80vh] bg-gray-50 px-4 py-10 sm:px-6">
+      <div className="mx-auto max-w-3xl">
+        <header className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Min side
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">
+            Her finner du profilinformasjonen din.
+          </p>
+        </header>
+
+        <article
+          aria-labelledby="profile-heading"
+          className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+        >
+          <div className="h-28 bg-indigo-400 sm:h-36" />
+
+          <div className="px-6 pb-8 sm:px-8">
+            <div
+              aria-hidden="true"
+              className="relative -mt-12 flex size-24 items-center justify-center rounded-full border-4 border-white bg-indigo-100 text-4xl font-bold text-indigo-700 shadow-sm"
+            >
+              {initial}
+            </div>
+
+            <h2
+              id="profile-heading"
+              className="mt-4 break-words text-2xl font-bold text-gray-900"
+            >
+              {username ? `@${username}` : "Din profil"}
+            </h2>
+
+            <dl className="mt-6 divide-y divide-gray-100 border-t border-gray-100"> // dl samler lister med etikketer
+              <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+                <dt className="text-sm font-medium text-gray-500"> // dt selve etikket tittlene for verdien
+                  Brukernavn
+                </dt>
+                <dd className="mt-1 break-words text-sm text-gray-900 sm:col-span-2 sm:mt-0"> // dd brukes for verdien
+                  {username || "Ikke tilgjengelig"}
+                </dd>
+              </div>
+
+              <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+                <dt className="text-sm font-medium text-gray-500">
+                  E-post
+                </dt>
+                <dd className="mt-1 break-words text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                  {email || "Ikke tilgjengelig"}
+                </dd>
+              </div>
+            </dl>
           </div>
-        </div>
-
-        <a
-          href="/canvas/1"
-          className="flex h-fit flex-col items-center gap-1 text-xs text-neutral-700">
-          <span className="flex size-14 items-center justify-center rounded-full bg-green-500 text-4xl font-bold text-white transition hover:bg-green-600">
-            +
-          </span>
-          Lag ny tegning
-        </a>
+        </article>
       </div>
     </section>
-    )
+  );
 }
