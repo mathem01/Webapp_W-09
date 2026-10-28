@@ -12,7 +12,7 @@ const [password, setPassword] = useState("");
 const [error, setError] = useState<string | null>(null);
 const [isPending, startTransition] = useTransition();
 
-function onSubmit(e: React.FormEvent<HTMLFormElement>){
+function registrerBruker(e: React.FormEvent<HTMLFormElement>){
 
 e.preventDefault();
 setError(null);     
@@ -45,7 +45,7 @@ startTransition(async () => {
 
 }
 
-return (<form onSubmit={onSubmit} className="mt-4 flex flex-col">
+return (<form onSubmit={registrerBruker} className="mt-4 flex flex-col">
           <label htmlFor="name" className="text-sm" >
             Navn
           </label>
