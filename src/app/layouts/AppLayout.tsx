@@ -5,6 +5,8 @@ import { LogoutButton } from "@/components/LogoutButton";
 
 export function AppLayout({ children, requestInfo }: LayoutProps) {
  const isAuthenticated = requestInfo?.ctx.session.isAuthenticated;
+ const username = requestInfo?.ctx.session.username;
+ const initial = username?.charAt(0).toUpperCase() || "?";
   return (
     <div>
       <header>
@@ -18,7 +20,22 @@ export function AppLayout({ children, requestInfo }: LayoutProps) {
           <input name="S" placeholder="Søk..." className="w-full bg-transparent outline-none" />
         </form>
       {isAuthenticated ? (
-        <LogoutButton />
+        <div className="flex items-center gap-4">
+          <LogoutButton />
+          <a
+            href="/myPage"
+            aria-label="Gå til min profil"
+            className="flex flex-col items-center gap-1"
+          >
+            <span
+              aria-hidden="true"
+              className="flex size-10 items-center justify-center rounded-full bg-indigo-100 text-lg font-bold text-indigo-700"
+            >
+              {initial}
+            </span>
+            <span className="text-xs">Profil</span>
+          </a>
+        </div>
         ) : (
           <>
         <a href="/register">Registrer</a>
