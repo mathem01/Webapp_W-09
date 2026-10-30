@@ -100,10 +100,11 @@ export async function MyPage({ ctx }: RequestInfo) {
               </p>
             </div>
           ) : (
-            <DrawingGrid drawings={result.data} />
+            <DrawingGrid drawings={result.data} editable />
           )}
         </section>
       </div>
     </section>
   );
 }
+
