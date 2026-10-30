@@ -1,3 +1,5 @@
+import { DrawingToolbar } from "../components/editor/DrawingToolbar";
+
 export function Canvas() {
   return (
     <section className="flex h-[80vh] min-h-[32rem] flex-col text-sm">
@@ -13,15 +15,7 @@ export function Canvas() {
       </div>
 
       <div className="relative flex min-h-0 flex-1 items-center justify-center bg-neutral-700 p-8">
-        <div className="absolute left-6 top-4 flex flex-col gap-1 bg-white p-1.5 [&_div]:grid [&_div]:size-8 [&_div]:cursor-pointer [&_div]:place-items-center [&_div]:rounded [&_div]:transition [&_div:hover]:bg-slate-200">
-          <div>✏️</div>
-          <div>🧽</div>
-          <div>🪣</div>
-          <div>🎨</div>
-          <div>📏</div>
-          <div>⬜</div>
-          <div>✋</div>
-        </div>
+        <DrawingToolbar />
         <div className="aspect-square h-full max-w-full bg-white" />
       </div>
 
