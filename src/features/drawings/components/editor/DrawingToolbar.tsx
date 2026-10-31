@@ -14,7 +14,7 @@ const ICONS: Record<string, string> = {
 export function DrawingToolbar() {
   return (
     <aside
-      className="absolute left-6 top-4 z-10 flex w-16 shrink-0 flex-col items-center gap-2 border-r bg-white p-2"
+      className="z-10 flex w-16 shrink-0 flex-col items-center gap-2 border-r bg-white p-2"
     >
       <div role="group" className="flex flex-col gap-1">
         {DRAWING_TOOLS.map((tool) => (

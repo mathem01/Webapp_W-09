@@ -1,18 +1,21 @@
+import { DrawingCanvas } from "../components/editor/DrawingCanvas";
 import { DrawingMenuBar } from "../components/editor/DrawingMenuBar";
 import { DrawingStatusBar } from "../components/editor/DrawingStatusBar";
 import { DrawingToolbar } from "../components/editor/DrawingToolbar";
 
 export function Canvas() {
   return (
-    <section className="flex h-[80vh] min-h-[32rem] flex-col text-sm">
+    <section className="flex h-[80vh] min-h-[32rem] flex-col overflow-hidden border bg-white text-sm">
       <DrawingMenuBar />
 
-      <div className="relative flex min-h-0 flex-1 items-center justify-center bg-neutral-700 p-8">
+      <div className="flex min-h-0 flex-1">
         <DrawingToolbar />
-        <div className="aspect-square h-full max-w-full bg-white" />
+
+        <main className="relative min-h-0 min-w-0 flex-1">
+          <DrawingCanvas />
+        </main>
       </div>
 
-      
       <DrawingStatusBar />
     </section>
   );
