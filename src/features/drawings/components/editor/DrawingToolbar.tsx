@@ -1,5 +1,6 @@
 "use client";
 
+import { DrawingEditorState } from "../../hooks/useDrawingEditor";
 import { DRAWING_TOOLS } from "../../utils/drawing-tools";
 import { ColorSelection } from "./ColorSelection";
 
@@ -9,9 +10,16 @@ const ICONS: Record<string, string> = {
   fill: "🪣",
   colorpicker: "💧",
   pan: "✋",
+  empty: "🗑️"
 };
 
-export function DrawingToolbar() {
+type Props = {
+  editor: DrawingEditorState;
+};
+
+export function DrawingToolbar({ editor }: Props) {
+  const { selectedColor, setColor } = editor
+
   return (
     <aside
       className="z-10 flex w-16 shrink-0 flex-col items-center gap-2 border-r bg-white p-2"
@@ -31,7 +39,22 @@ export function DrawingToolbar() {
 
       <div className="my-1 h-px w-full bg-gray-200" />
 
-      <ColorSelection />
+      <ColorSelection
+        color={selectedColor}
+        onChange={setColor}
+      />
+
+      <div className="my-1 h-px w-full bg-gray-200" />
+
+      <button
+        key={"empty"}
+        type="button"
+        title={"Tøm"}
+        onClick={editor.emptyDrawing}
+        className="size-10 rounded text-xl transition hover:bg-slate-200"
+      >
+        {ICONS["empty"]}
+      </button>
     </aside>
   );
 }

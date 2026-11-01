@@ -13,3 +13,8 @@ export type Point = {
   x: number;
   y: number;
 };
+
+export type PixelUpdate = {
+    index: number;
+    color: PixelColor;
+};

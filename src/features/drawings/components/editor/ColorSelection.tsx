@@ -6,7 +6,12 @@ const DEFAULT_COLORS = [
   "#ec4899", "#92400e",
 ];
 
-export function ColorSelection() {
+type Props = {
+  color: string;
+  onChange: (color: string) => void;
+};
+
+export function ColorSelection({ color, onChange }: Props) {
   return (
     <div className="grid grid-cols-2 gap-1">
       {DEFAULT_COLORS.map((value) => (
@@ -14,7 +19,10 @@ export function ColorSelection() {
           key={value}
           type="button"
           title={value}
-          className="size-5 rounded border border-gray-400 outline-offset-2"
+          onClick={() => onChange(value)}
+          className={`size-5 rounded border border-gray-400 outline-offset-2 ${
+            color === value ? "outline-2 outline-blue-500" : ""
+          }`}
           style={{ backgroundColor: value }}
         />
       ))}
