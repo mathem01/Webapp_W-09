@@ -1,9 +1,7 @@
 import type { RequestInfo } from "rwsdk/worker";
 import { ErrorHttpStatus, Errors, parseJson, ResultHandler, toResponse } from "@/lib/result";
-import {
-  type DrawingService,
-  service,
-} from "./drawing-service";
+import { type DrawingService } from "./drawing-service";
+import { service } from "./drawing-instances";
 import { requireUser } from "@/middleware/guards";
 
 export interface DrawingController {
@@ -88,7 +86,7 @@ export function createDrawingController(_service: DrawingService): DrawingContro
       const body = await parseJson(request);
       if (!body.ok) return toResponse(body);
 
-      const result = await _service.setDrawingVisibility(params.drawingId, userId!, body);
+      const result = await _service.setDrawingVisibility(params.drawingId, userId!, body.data);
 
       return toResponse(result);
     },

@@ -4,7 +4,7 @@ import { serializePixels, deserializePixels } from "@/features/drawings/utils/pi
 import { firstIssue } from "@/auth/schemas";
 import {z} from "zod"; 
 import { DrawingView } from "./drawing-types";
-import { DrawingRepository, repository } from "./drawing-repository";
+import { type DrawingRepository } from "./drawing-repository";
 import { toDrawingView } from "./drawing-mapper";
 
 export interface DrawingService {
@@ -159,7 +159,7 @@ export function createDrawingService(_repository: DrawingRepository): DrawingSer
   }
 }
 
-export const service = createDrawingService(repository);
+
 
 
 // export async function updateDrawing(

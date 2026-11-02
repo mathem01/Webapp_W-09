@@ -3,7 +3,7 @@
 import { ErrorResponse } from "rwsdk/worker";
 
 import { requireUser } from "@/middleware/guards";
-import { service } from "@/features/drawings/drawing-service";
+import { service } from "@/features/drawings/drawing-instances";
 
 /** Henter innlogget bruker, og smalner typen slik at userId er en string. */
 function currentUser() {
@@ -29,10 +29,10 @@ export async function deleteDrawing(id: string) {
 
 export async function publishDrawing(id: string) {
   const user = currentUser();
-  return service.setDrawingVisibility(id, user.id, true);
+  return service.setDrawingVisibility(id, user.id, {isPublic:true});
 }
 
 export async function unpublishDrawing(id: string) {
   const user = currentUser();
-  return service.setDrawingVisibility(id, user.id, false);
+  return service.setDrawingVisibility(id, user.id, {isPublic:false});
 }
