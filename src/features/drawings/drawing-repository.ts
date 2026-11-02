@@ -10,6 +10,7 @@ import { DrawingView } from "./drawing-types";
 export interface DrawingRepository {
     createDrawing(userId: string, drawingInput: DrawingInput): Promise<Result<{ id: string }>>;
     getDrawing(id: string): Promise<Result<Drawing | null>>
+        createRemix(userId: string, original: Drawing): Promise<Result<{ id: string }>>
     updateDrawing(id: string, userId: string, drawingInput: DrawingInput): Promise<Result<{ id: string } | null>>
     deleteDrawing(id: string, userId: string): Promise<Result<boolean>>
 
@@ -32,6 +33,25 @@ export function createDrawingRepository(_db: DB): DrawingRepository {
                         width: drawingInput.width,
                         height: drawingInput.height,
                         pixels: serializePixels(drawingInput.pixels),
+                    })
+                    .returning({ id: drawings.id });
+
+                return row
+            })
+        },
+                /* Lagrer en kopi av en tegning, eid av den som remikser.
+           remixOfId peker tilbake på originalen, og kopien starter privat. */
+        async createRemix(userId: string, original: Drawing) {
+            return executeDbOperation(async () => {
+                const [row] = await _db
+                    .insert(drawings)
+                    .values({
+                        userId,
+                        title: original.title,
+                        width: original.width,
+                        height: original.height,
+                        pixels: original.pixels,
+                        remixOfId: original.id,
                     })
                     .returning({ id: drawings.id });
 
