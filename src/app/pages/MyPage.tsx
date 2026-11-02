@@ -87,7 +87,7 @@ export async function MyPage({ ctx }: RequestInfo) {
 
           {!result.ok ? (
             <div role="alert" className="rounded-xl bg-red-50 p-5 text-sm text-red-800">
-              <p>Kunne ikke hente tegningene dine. Prøv igjen.</p>
+              <p>Ingen tegninger funnet.</p>
               <a href="/myPage" className="mt-2 inline-block font-medium underline underline-offset-4">
                 Prøv igjen
               </a>
