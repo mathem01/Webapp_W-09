@@ -1,48 +1,66 @@
-import { Counter } from "@/components/Counter";
-import { TimeClient } from "@/components/TimeClient";
+import { requestInfo } from "rwsdk/worker";
 
-/**
- * En server-komponent. Den kjører på serveren, én gang per forespørsel, og
- * nettleseren får ferdig HTML. Derfor viser klokka under tidspunktet på
- * serveren, og den endrer seg bare når du laster siden på nytt.
- *
- * Server-komponent er standarden i RedwoodSDK. Trenger du klikk eller state,
- * lager du en klient-komponent, som `TimeClient` og `Counter` under.
- */
 export function Home() {
-  const now = new Date().toLocaleString("no-NO");
+  const loggedIn = requestInfo.ctx.session?.isAuthenticated ?? false;
 
   return (
-    <main className="mx-auto max-w-2xl p-8 font-sans">
-      <h1 className="text-3xl font-bold">Webapplikasjoner 2026</h1>
-      <p className="mt-2 text-slate-600">
-        Startprosjektet virker. Nå kan dere begynne å bygge.
-      </p>
+    <section className="bg-slate-400">
+      <div className="mx-auto min-h-[calc(100vh-8rem)] w-full max-w-5xl bg-neutral-200">
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 px-6 py-16 text-center">
+          <h1 className="text-4xl font-bold text-neutral-900">
+            Tegn, del og remiks
+          </h1>
+          <p className="max-w-xl text-neutral-700">
+            Lag pikseltegninger rett i nettleseren, publiser dem og la andre
+            bygge videre på det du har laget.
+          </p>
 
-      <p className="mt-6 text-sm text-slate-500">
-        Rendret på serveren {now}. Last siden på nytt, så endrer tallet seg.
-      </p>
+          <div className="mt-10 flex gap-3">
+            <a
+              href="/drawing"
+              className="rounded-xl bg-green-500 px-5 py-2 font-semibold text-white transition hover:bg-green-600"
+            >
+              Begynn å tegne
+            </a>
+            <a
+              href="/explore"
+              className="rounded-xl bg-neutral-400 px-5 py-2 font-semibold text-white transition hover:bg-neutral-500"
+            >
+              Utforsk tegninger
+            </a>
+          </div>
 
-      {/* Samme klokke, men rendret i nettleseren. Ser dere to ulike tidspunkt,
-          har dere sett forskjellen på server og klient med egne øyne. */}
-      <TimeClient />
+          {!loggedIn && (
+            <p className="text-sm text-neutral-600">
+              Har du ikke bruker?{" "}
+              <a href="/register" className="font-semibold underline">
+                Registrer deg
+              </a>
+            </p>
+          )}
+        </div>
 
-      <Counter />
-
-      <h2 className="mt-10 text-xl font-semibold">Prøv dette</h2>
-      <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
-        <li>
-          Åpne{" "}
-          <a className="underline" href="/api/status">
-            /api/status
-          </a>
-          . Det er en rute som svarer JSON i stedet for HTML.
-        </li>
-        <li>
-          Endre teksten i src/app/pages/Home.tsx og se at siden oppdaterer seg.
-        </li>
-        <li>Trykk på knappen over. Den er en klient-komponent.</li>
-      </ul>
-    </main>
+        <div className="mx-auto mt-30 grid max-w-4xl gap-4 px-6 pb-16 sm:grid-cols-3">
+          <div className="rounded-xl bg-white p-5">
+            <h2 className="font-bold text-neutral-900">1. Tegn</h2>
+            <p className="mt-1 text-sm text-neutral-700">
+              Velg størrelse på lerretet og fargelegg piksel for piksel.
+            </p>
+          </div>
+          <div className="rounded-xl bg-white p-5">
+            <h2 className="font-bold text-neutral-900">2. Publiser</h2>
+            <p className="mt-1 text-sm text-neutral-700">
+              Del tegningen din så andre kan se, like og kommentere.
+            </p>
+          </div>
+          <div className="rounded-xl bg-white p-5">
+            <h2 className="font-bold text-neutral-900">3. Remiks</h2>
+            <p className="mt-1 text-sm text-neutral-700">
+              Ta en kopi av en annens tegning og lag din egen versjon.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
