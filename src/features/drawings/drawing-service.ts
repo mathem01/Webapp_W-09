@@ -3,7 +3,7 @@ import { drawingInputSchema, drawingVisibilitySchema, type DrawingInput } from "
 import { serializePixels, deserializePixels } from "@/features/drawings/utils/pixels";
 import { firstIssue } from "@/auth/schemas";
 import {z} from "zod"; 
-import { DrawingView } from "./drawing-types";
+import { DrawingView, type PublicDrawingView } from "./drawing-types";
 import { type DrawingRepository } from "./drawing-repository";
 import { toDrawingView } from "./drawing-mapper";
 
@@ -13,7 +13,7 @@ export interface DrawingService {
   updateDrawing(id: string, userId: string, input: unknown): Promise<Result<void>>
   deleteDrawing(id: string, userId: string): Promise<Result<void>>
 
-  listPublicDrawings(limit: number): Promise<Result<DrawingView[]>>
+  listPublicDrawings(limit: number): Promise<Result<PublicDrawingView[]>>
   listPublicDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
   listAllDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
 
@@ -105,7 +105,7 @@ export function createDrawingService(_repository: DrawingRepository): DrawingSer
 
       return ResultHandler.success(undefined)
     },
-    async listPublicDrawings(limit: number): Promise<Result<DrawingView[]>> {
+    async listPublicDrawings(limit: number): Promise<Result<PublicDrawingView[]>> {
       if (limit < 1) {
         limit = 1
       }
