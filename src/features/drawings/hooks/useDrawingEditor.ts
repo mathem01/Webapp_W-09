@@ -26,10 +26,10 @@ type Stroke = {
 export function useDrawingEditor(initial: DrawingInput) {
     const [drawing, setDrawing] = useState(initial);
     const drawingRef = useRef(initial);
+    const strokeRef = useRef<Stroke | null>(null);
 
     const [selectedTool, setTool] = useState<DrawingTool>("pencil");
     const [selectedColor, setColor] = useState("#000000");
-    const strokeRef = useRef<Stroke | null>(null);
 
     function updateTitle(title: string) {
         const current = drawingRef.current;
@@ -120,16 +120,24 @@ export function useDrawingEditor(initial: DrawingInput) {
 
     function beginStroke(point: Point): PixelUpdate[] {
         if (strokeRef.current) return [];
-
         const current = drawingRef.current;
 
-        if (!isInsideArea(
-            point.x,
-            point.y,
-            current.width,
-            current.height,
-        )) {
+        const {x, y} = point
+        const {width, height, pixels} = current
+
+        if (!isInsideArea(x, y, width, height)) {
             return [];
+        }
+
+        if (selectedTool == "colorpicker") {
+            const index = getPixelIndex(x, y, width)
+            const pickedColor = pixels[index]
+
+            if (pickedColor !== null) {
+                setColor(pickedColor)
+            }
+
+            return []
         }
 
         strokeRef.current = {
@@ -140,13 +148,7 @@ export function useDrawingEditor(initial: DrawingInput) {
         };
 
         if (selectedTool === "fill") {
-            const indices = floodFill(
-                current.pixels,
-                current.width,
-                current.height,
-                point,
-                selectedColor
-            );
+            const indices = floodFill(pixels, width, height, point, selectedColor);
             return applyPixels(indices, selectedColor)
         }
 
