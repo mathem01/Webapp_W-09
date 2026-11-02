@@ -3,6 +3,8 @@
 import { useRef, useState } from "react";
 import type { DrawingInput } from "../drawing-schema";
 import type {
+    DrawingTool,
+    PixelColor,
     PixelUpdate,
     Point,
 } from "../types/drawing-editor";
@@ -15,6 +17,7 @@ import {
 
 type Stroke = {
     last: Point;
+    tool: DrawingTool;
     color: string;
     changed: boolean;
 };
@@ -23,6 +26,7 @@ export function useDrawingEditor(initial: DrawingInput) {
     const [drawing, setDrawing] = useState(initial);
     const drawingRef = useRef(initial);
 
+    const [selectedTool, setTool] = useState<DrawingTool>("pencil");
     const [selectedColor, setColor] = useState("#000000");
     const strokeRef = useRef<Stroke | null>(null);
 
@@ -63,6 +67,8 @@ export function useDrawingEditor(initial: DrawingInput) {
         if (!stroke) return [];
 
         const current = drawingRef.current;
+        const color: PixelColor = stroke.tool === "eraser" ? null : stroke.color
+
         const pixels = [...current.pixels];
         const updates: PixelUpdate[] = [];
 
@@ -81,12 +87,12 @@ export function useDrawingEditor(initial: DrawingInput) {
                 current.width,
             );
 
-            if (pixels[index] === stroke.color) continue;
+            if (pixels[index] === color) continue;
 
-            pixels[index] = stroke.color;
+            pixels[index] = color;
             updates.push({
                 index,
-                color: stroke.color,
+                color,
             });
         }
 
@@ -120,6 +126,7 @@ export function useDrawingEditor(initial: DrawingInput) {
 
         strokeRef.current = {
             last: point,
+            tool: selectedTool,
             color: selectedColor,
             changed: false,
         };
@@ -140,6 +147,8 @@ export function useDrawingEditor(initial: DrawingInput) {
 
     return {
         drawing,
+        selectedTool,
+        setTool,
         selectedColor,
         setColor,
         updateTitle,

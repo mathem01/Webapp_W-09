@@ -18,21 +18,24 @@ type Props = {
 };
 
 export function DrawingToolbar({ editor }: Props) {
-  const { selectedColor, setColor } = editor
+  const { selectedTool, setTool, selectedColor, setColor } = editor
 
   return (
     <aside
       className="z-10 flex w-16 shrink-0 flex-col items-center gap-2 border-r bg-white p-2"
     >
       <div role="group" className="flex flex-col gap-1">
-        {DRAWING_TOOLS.map((tool) => (
+        {DRAWING_TOOLS.map(({id, label}) => (
           <button
-            key={tool.id}
+            key={id}
             type="button"
-            title={tool.label}
-            className="grid size-10 place-items-center rounded text-xl transition hover:bg-slate-200"
+            title={label}
+            onClick={() => setTool(id)}
+            className={`grid size-10 place-items-center rounded text-xl transition hover:bg-slate-200 ${
+              selectedTool === id ? "bg-blue-100 ring-2 ring-blue-500" : ""
+            }`}
           >
-            {ICONS[tool.id]}
+            {ICONS[id]}
           </button>
         ))}
       </div>
