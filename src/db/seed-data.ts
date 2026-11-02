@@ -3,7 +3,8 @@
 import { eq } from "drizzle-orm";
 
 import { drawings, user } from "./schema";
-import { service } from "@/features/drawings/drawing-service";
+import { createDrawingRepository } from "@/features/drawings/drawing-repository";
+import { createDrawingService } from "@/features/drawings/drawing-service";
 import type { DrawingInput } from "@/features/drawings/drawing-schema";
 import type { DB } from "@/db";
 
@@ -228,6 +229,10 @@ export async function seedInto(db: DB) {
 
   // Brukerne må inn før tegningene: fremmednøkkelen krever at de finnes.
   await db.insert(user).values(SEED_USERS);
+
+    /* Bygger servicen av databasen vi fikk inn, så seed kan kjøres både mot
+     D1 og mot en database i minnet i testene. */
+  const service = createDrawingService(createDrawingRepository(db));
 
   for (const { userId, title, isPublic, width, height, pixels } of SEED_DRAWINGS) {
     // Går gjennom servicen, så valideringen kjører samme vei som i appen.

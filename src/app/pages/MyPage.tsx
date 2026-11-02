@@ -1,5 +1,5 @@
 import { ErrorResponse, type RequestInfo } from "rwsdk/worker";
-import { service } from "@/features/drawings/drawing-service";
+import { service } from "@/features/drawings/drawing-instances";
 import { DrawingGrid } from "@/features/drawings/components/DrawingGrid";
 
 export async function MyPage({ ctx }: RequestInfo) {

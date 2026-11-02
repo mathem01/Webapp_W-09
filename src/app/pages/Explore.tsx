@@ -1,5 +1,5 @@
 import { DrawingGrid } from "@/features/drawings/components/DrawingGrid";
-import { service } from "@/features/drawings/drawing-service";
+import { service } from "@/features/drawings/drawing-instances";
 
 export async function Explore() {
   const result = await service.listPublicDrawings(20);
