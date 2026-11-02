@@ -3,7 +3,7 @@
 import { ErrorResponse } from "rwsdk/worker";
 
 import { requireUser } from "@/middleware/guards";
-import { service } from "@/features/drawings/drawing-service";
+import { service } from "@/features/drawings/drawing-instances";
 
 /** Henter innlogget bruker, og smalner typen slik at userId er en string. */
 function currentUser() {

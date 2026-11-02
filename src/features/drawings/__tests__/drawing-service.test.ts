@@ -172,7 +172,7 @@ describe("drawingService.getDrawing", () => {
     const visibility = await service.setDrawingVisibility(
       created.data.id,
       ALICE,
-      true
+      { isPublic: true }
     );
 
     expect(visibility.ok).toBe(true);
@@ -352,7 +352,7 @@ describe("drawingService.setDrawingVisibility", () => {
     const result = await service.setDrawingVisibility(
       created.data.id,
       ALICE,
-      true
+      { isPublic: true }
     );
 
     expect(result.ok).toBe(true);
@@ -372,7 +372,7 @@ describe("drawingService.setDrawingVisibility", () => {
     const result = await service.setDrawingVisibility(
       created.data.id,
       BOB,
-      true
+      { isPublic: true }
     );
 
     expect(result.ok).toBe(false);
@@ -390,7 +390,7 @@ describe("drawingService.setDrawingVisibility", () => {
     const result = await service.setDrawingVisibility(
       "finnes-ikke",
       ALICE,
-      true
+      { isPublic: true }
     );
 
     expect(result.ok).toBe(false);
@@ -420,7 +420,7 @@ describe("drawingService.listPublicDrawings", () => {
     await service.setDrawingVisibility(
       publicDrawing.data.id,
       ALICE,
-      true
+      { isPublic: true }
     );
 
     const result = await service.listPublicDrawings(10);
@@ -448,7 +448,7 @@ describe("drawingService.listPublicDrawings", () => {
       await service.setDrawingVisibility(
         created.data.id,
         ALICE,
-        true
+        { isPublic: true }
       );
     }
 
@@ -490,13 +490,13 @@ describe("drawingService.listPublicDrawingsByUser", () => {
     await service.setDrawingVisibility(
       alicePublic.data.id,
       ALICE,
-      true
+      { isPublic: true }
     );
 
     await service.setDrawingVisibility(
       bobPublic.data.id,
       BOB,
-      true
+      { isPublic: true }
     );
 
     const result = await service.listPublicDrawingsByUser(ALICE);
@@ -530,7 +530,7 @@ describe("drawingService.listAllDrawingsByUser", () => {
     await service.setDrawingVisibility(
       publicDrawing.data.id,
       ALICE,
-      true
+      { isPublic: true }
     );
 
     const result = await service.listAllDrawingsByUser(ALICE);
