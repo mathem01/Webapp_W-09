@@ -26,6 +26,13 @@ export function ColorSelection({ color, onChange }: Props) {
           style={{ backgroundColor: value }}
         />
       ))}
+
+      <input
+        type={"color"}
+        value={color}
+        onChange={(e) => onChange(e.target.value)}
+        className="col-span-2 h-8 w-full cursor-pointer"
+      />
     </div>
   );
 }
