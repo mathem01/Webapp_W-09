@@ -20,6 +20,11 @@ export async function MyPage({ ctx }: RequestInfo) {
           <p className="mt-2 text-sm text-gray-500">
             Her finner du profilen din og tegningene du har lagret.
           </p>
+          {username && (
+            <a href={`/profile/${encodeURIComponent(username)}`} className="mt-3 inline-block text-sm font-medium text-indigo-700 underline underline-offset-4">
+              Se offentlig profil
+            </a>
+          )}
         </header>
 
         <article
@@ -107,3 +112,4 @@ export async function MyPage({ ctx }: RequestInfo) {
     </section>
   );
 }
+
