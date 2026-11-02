@@ -62,3 +62,39 @@ export function getLinePixels(start: Point, end: Point): Point[] {
 
   return points;
 }
+
+export function floodFill(pixels: PixelColor[], width: number, height: number, start: Point, color: PixelColor): number[] {
+    if (!isInsideArea(start.x, start.y, width, height)) {
+        return [];
+    }
+
+    const startIndex = getPixelIndex(start.x, start.y, width);
+    const target = pixels[startIndex];
+
+    if (target === color) return [];
+
+    const result: number[] = [];
+    const visited = new Uint8Array(pixels.length);
+    const stack = [startIndex];
+
+    while (stack.length > 0) {
+        const index = stack.pop()!;
+
+        if (visited[index]) continue;
+        visited[index] = 1;
+
+        if (pixels[index] !== target) continue;
+
+        result.push(index);
+
+        const x = index % width;
+        const y = Math.floor(index / width);
+
+        if (x > 0) stack.push(index - 1);
+        if (x < width - 1) stack.push(index + 1);
+        if (y > 0) stack.push(index - width);
+        if (y < height - 1) stack.push(index + width);
+    }
+
+    return result;
+}

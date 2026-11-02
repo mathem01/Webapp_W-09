@@ -10,6 +10,7 @@ import type {
 } from "../types/drawing-editor";
 import {
     createEmptyPixels,
+    floodFill,
     getLinePixels,
     getPixelIndex,
     isInsideArea,
@@ -62,48 +63,55 @@ export function useDrawingEditor(initial: DrawingInput) {
         setDrawing(next);
     }
 
-    function drawTo(point: Point): PixelUpdate[] {
-        const stroke = strokeRef.current;
-        if (!stroke) return [];
-
+    function applyPixels(indices: number[], color: PixelColor): PixelUpdate[] {
         const current = drawingRef.current;
-        const color: PixelColor = stroke.tool === "eraser" ? null : stroke.color
+        let pixels = current.pixels;
 
-        const pixels = [...current.pixels];
         const updates: PixelUpdate[] = [];
 
-        const points = getLinePixels(stroke.last, point);
-
-        for (const p of points) {
-            if (!isInsideArea(
-                p.x, p.y,
-                current.width, current.height,
-            )) {
+        for (const index of indices) {
+            if (index < 0 || index >= pixels.length) {
                 continue;
             }
 
-            const index = getPixelIndex(
-                p.x, p.y,
-                current.width,
-            );
-
             if (pixels[index] === color) continue;
 
+            if (pixels === current.pixels) {
+                pixels = [...current.pixels];
+            }
+
             pixels[index] = color;
-            updates.push({
-                index,
-                color,
-            });
+            updates.push({ index, color });
         }
 
         if (updates.length > 0) {
             drawingRef.current = {
                 ...current,
                 pixels,
-            };
+            }
 
-            stroke.changed = true;
+            if (strokeRef.current) {
+                strokeRef.current.changed = true;
+            }
         }
+
+        return updates;
+    }
+
+    function drawTo(point: Point): PixelUpdate[] {
+        const stroke = strokeRef.current;
+        if (!stroke) return [];
+
+        if (stroke.tool === "fill") return [];
+
+        const current = drawingRef.current;
+        const color: PixelColor = stroke.tool === "eraser" ? null : stroke.color
+
+        const indices = getLinePixels(stroke.last, point)
+            .filter((p) => isInsideArea(p.x, p.y, current.width, current.height))
+            .map((p) => getPixelIndex(p.x, p.y, current.width));
+
+        const updates = applyPixels(indices, color);
 
         stroke.last = point;
 
@@ -130,6 +138,17 @@ export function useDrawingEditor(initial: DrawingInput) {
             color: selectedColor,
             changed: false,
         };
+
+        if (selectedTool === "fill") {
+            const indices = floodFill(
+                current.pixels,
+                current.width,
+                current.height,
+                point,
+                selectedColor
+            );
+            return applyPixels(indices, selectedColor)
+        }
 
         return drawTo(point);
     }
