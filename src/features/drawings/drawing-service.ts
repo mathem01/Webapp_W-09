@@ -19,6 +19,7 @@ function clamp(verdi: number, minst: number, mest: number) {
 export interface DrawingService {
   createDrawing(userId: string, input: unknown): Promise<Result<{ id: string }>>
   getDrawing(id: string, userId: string | null): Promise<Result<DrawingView>>
+    remixDrawing(id: string, userId: string): Promise<Result<{ id: string }>>
   updateDrawing(id: string, userId: string, input: unknown): Promise<Result<void>>
   deleteDrawing(id: string, userId: string): Promise<Result<void>>
 
@@ -73,6 +74,46 @@ export function createDrawingService(_repository: DrawingRepository): DrawingSer
         toDrawingView(result.data)
       )
     },
+
+        /* Lager en egen kopi av en publisert tegning.
+
+       Originalen må være offentlig, ellers svarer vi NOT_FOUND slik som
+       getDrawing, så private tegninger ikke kan avsløres gjennom remiks.
+       Eieren kan slå av remiks med allowRemix, og da er tegningen synlig
+       men ikke kopierbar, altså FORBIDDEN. */
+    async remixDrawing(id: string, userId: string): Promise<Result<{ id: string }>> {
+      const original = await _repository.getDrawing(id)
+
+      if (!original.ok) return original
+
+      if (!original.data || !original.data.isPublic) {
+        return ResultHandler.failure(
+          "Tegningen finnes ikke",
+          Errors.NOT_FOUND
+        )
+      }
+
+      if (!original.data.allowRemix) {
+        return ResultHandler.failure(
+          "Denne tegningen kan ikke remikses",
+          Errors.FORBIDDEN
+        )
+      }
+
+      const result = await _repository.createRemix(userId, original.data)
+
+      if (!result.ok) return result
+
+      if (!result.data) {
+        return ResultHandler.failure(
+          "ID ble ikke opprettet",
+          Errors.NOT_FOUND
+        )
+      }
+
+      return ResultHandler.success(result.data)
+    },
+    
     async updateDrawing(id: string, userId: string, input: unknown): Promise<Result<void>> {
       const parsed = drawingInputSchema.safeParse(input);
       if (!parsed.success) {
