@@ -1,11 +1,11 @@
 import { type DB } from "@/db";
-import { type Drawing, drawings } from "@/db/schema";
+import { type Drawing, drawings, user } from "@/db/schema";
 import { eq, desc, and, or } from "drizzle-orm";
 import { drawingInputSchema, type DrawingInput } from "@/features/drawings/drawing-schema";
 import { serializePixels, deserializePixels } from "@/features/drawings/utils/pixels";
 import { executeDbOperation, type Result } from "@/lib/result";
 import { toDrawingView } from "./drawing-mapper";
-import { DrawingView } from "./drawing-types";
+import { DrawingView, type PublicDrawingView } from "./drawing-types";
 
 export interface DrawingRepository {
     createDrawing(userId: string, drawingInput: DrawingInput): Promise<Result<{ id: string }>>;
@@ -13,7 +13,7 @@ export interface DrawingRepository {
     updateDrawing(id: string, userId: string, drawingInput: DrawingInput): Promise<Result<{ id: string } | null>>
     deleteDrawing(id: string, userId: string): Promise<Result<boolean>>
 
-    listPublicDrawings(limit: number): Promise<Result<DrawingView[]>>
+    listPublicDrawings(limit: number): Promise<Result<PublicDrawingView[]>>
     listPublicDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
     listAllDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
 
@@ -89,13 +89,14 @@ export function createDrawingRepository(_db: DB): DrawingRepository {
         async listPublicDrawings(limit: number) {
             return executeDbOperation(async () => {
                 const rows = await _db
-                    .select()
+                    .select({ drawing: drawings, owner: { id: user.id, username: user.username } })
                     .from(drawings)
+                    .innerJoin(user, eq(drawings.userId, user.id))
                     .where(eq(drawings.isPublic, true))
                     .orderBy(desc(drawings.createdAt))
                     .limit(limit)
 
-                return rows.map(toDrawingView)
+                return rows.map(({ drawing, owner }) => ({ ...toDrawingView(drawing), owner }))
             })
         },
         async listPublicDrawingsByUser(userId: string) {
@@ -143,4 +144,5 @@ export function createDrawingRepository(_db: DB): DrawingRepository {
         },
     };
 }
+
 

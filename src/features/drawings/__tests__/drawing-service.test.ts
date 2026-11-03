@@ -560,3 +560,20 @@ describe("drawingService.listAllDrawingsByUser", () => {
     }
   });
 });
+
+it("feeden inkluderer bare offentlige tegninger med riktig eier og følger endret synlighet", async () => {
+  const first = await service.createDrawing(ALICE, drawing({ title: "Alice offentlig" }));
+  const second = await service.createDrawing(BOB, drawing({ title: "Bob privat" }));
+  if (!first.ok || !second.ok) throw new Error("Oppretting feilet");
+  await service.setDrawingVisibility(first.data.id, ALICE, { isPublic: true });
+  const published = await service.listPublicDrawings(20);
+  if (!published.ok) throw new Error("Henting feilet");
+  expect(published.data).toHaveLength(1);
+  expect(published.data[0].owner).toEqual({ id: ALICE, username: "alice" });
+  expect(published.data[0]).not.toHaveProperty("email");
+  expect(published.data[0].owner).not.toHaveProperty("email");
+  await service.setDrawingVisibility(first.data.id, ALICE, { isPublic: false });
+  const unpublished = await service.listPublicDrawings(20);
+  if (!unpublished.ok) throw new Error("Henting feilet");
+  expect(unpublished.data).toHaveLength(0);
+});

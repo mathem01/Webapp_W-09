@@ -13,3 +13,6 @@ export type DrawingView = {
   createdAt: Date;
   updatedAt: Date;
 };
+export type PublicDrawingView = DrawingView & {
+  owner: { id: string; username: string };
+};

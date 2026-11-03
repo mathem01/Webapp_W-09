@@ -35,6 +35,11 @@ startTransition(async () => {
     body: JSON.stringify(parsed.data),    
     });
 
+    if (res.status >= 500 && res.status <= 599) {
+        setError(`Serverfeil (${res.status}). Prøv igjen senere.`);
+        return;
+    }
+
     if (!res.ok) {
         setError("kunne ikke lage bruker, prøv et annen e-postadresse eller brukernavn");
         return;
@@ -128,5 +133,6 @@ return (<form onSubmit={registrerBruker} className="mt-4 flex flex-col">
 
 
 }
+
 
 
