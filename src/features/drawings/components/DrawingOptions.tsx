@@ -86,7 +86,7 @@ export function DrawingOptions({ drawingId, title, isPublic }: Props) {
     <div className="border-t border-gray-100 p-3" onKeyDown={closeMenuOnEscape}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <a href={`/drawing/${encodeURIComponent(drawingId)}`} className="block break-words text-sm font-medium text-gray-900 hover:underline">
+          <a href={`/drawing/${drawingId}`} className="block break-words text-sm font-medium text-gray-900 hover:underline">
             {title}
           </a>
           <p aria-live="polite" className="mt-1 text-xs text-gray-600">{statusText}</p>
@@ -135,4 +135,5 @@ export function DrawingOptions({ drawingId, title, isPublic }: Props) {
     </div>
   );
 }
+
 

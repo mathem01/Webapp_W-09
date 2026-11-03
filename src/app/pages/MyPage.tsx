@@ -21,7 +21,7 @@ export async function MyPage({ ctx }: RequestInfo) {
             Her finner du profilen din og tegningene du har lagret.
           </p>
           {username && (
-            <a href={`/profile/${encodeURIComponent(username)}`} className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+            <a href={`/profile/${username}`} className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
               Gå til profil
             </a>
           )}
@@ -112,5 +112,6 @@ export async function MyPage({ ctx }: RequestInfo) {
     </section>
   );
 }
+
 
 

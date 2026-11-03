@@ -11,7 +11,7 @@ export async function Profile({ params, request }: RequestInfo) {
   const normalizedUsername = username.toLowerCase();
   if (username !== normalizedUsername) {
     const url = new URL(request.url);
-    url.pathname = `/profile/${encodeURIComponent(normalizedUsername)}`;
+    url.pathname = `/profile/${normalizedUsername}`;
     return Response.redirect(url, 308);
   }
 
@@ -39,3 +39,4 @@ export async function Profile({ params, request }: RequestInfo) {
     </section>
   );
 }
+

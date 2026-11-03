@@ -13,7 +13,7 @@ export function ExploreGrid({ drawings, viewerUserId }: Props) {
       {drawings.map((drawing) => {
         const profileUrl = drawing.owner.id === viewerUserId
           ? "/myPage"
-          : `/profile/${encodeURIComponent(drawing.owner.username)}`;
+          : `/profile/${drawing.owner.username}`;
         return (
           <li key={drawing.id} className="min-w-0 rounded-md border border-neutral-300 bg-white p-2 shadow-sm transition hover:shadow-md">
             <div role="img" aria-label={drawing.title}>
@@ -34,3 +34,4 @@ export function ExploreGrid({ drawings, viewerUserId }: Props) {
     </ul>
   );
 }
+
