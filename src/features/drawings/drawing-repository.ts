@@ -1,6 +1,6 @@
 import { type DB } from "@/db";
 import { type Drawing, drawings, user } from "@/db/schema";
-import { eq, desc, and, or } from "drizzle-orm";
+import { eq, desc, and, or, count } from "drizzle-orm";
 import { drawingInputSchema, type DrawingInput } from "@/features/drawings/drawing-schema";
 import { serializePixels, deserializePixels } from "@/features/drawings/utils/pixels";
 import { executeDbOperation, type Result } from "@/lib/result";
@@ -13,7 +13,8 @@ export interface DrawingRepository {
     updateDrawing(id: string, userId: string, drawingInput: DrawingInput): Promise<Result<{ id: string } | null>>
     deleteDrawing(id: string, userId: string): Promise<Result<boolean>>
 
-    listPublicDrawings(limit: number): Promise<Result<PublicDrawingView[]>>
+    listPublicDrawings(limit: number, offset: number): Promise<Result<PublicDrawingView[]>>
+    countPublicDrawings(): Promise<Result<number>>
     listPublicDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
     listAllDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
 
@@ -86,7 +87,7 @@ export function createDrawingRepository(_db: DB): DrawingRepository {
                 return rows.length > 0
             })
         },
-        async listPublicDrawings(limit: number) {
+        async listPublicDrawings(limit: number, offset: number) {
             return executeDbOperation(async () => {
                 const rows = await _db
                     .select({ drawing: drawings, owner: { id: user.id, username: user.username } })
@@ -95,8 +96,22 @@ export function createDrawingRepository(_db: DB): DrawingRepository {
                     .where(eq(drawings.isPublic, true))
                     .orderBy(desc(drawings.createdAt))
                     .limit(limit)
+                    .offset(offset)
 
                 return rows.map(({ drawing, owner }) => ({ ...toDrawingView(drawing), owner }))
+            })
+        },
+        
+          /* Teller alle offentlige tegninger, så siden vet hvor mange sider
+           det finnes. Egen spørring, fordi listen bare henter én side. */
+        async countPublicDrawings() {
+            return executeDbOperation(async () => {
+                const [row] = await _db
+                    .select({ value: count() })
+                    .from(drawings)
+                    .where(eq(drawings.isPublic, true))
+
+                return row?.value ?? 0
             })
         },
         async listPublicDrawingsByUser(userId: string) {

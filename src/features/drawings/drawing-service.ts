@@ -3,17 +3,26 @@ import { drawingInputSchema, drawingVisibilitySchema, type DrawingInput } from "
 import { serializePixels, deserializePixels } from "@/features/drawings/utils/pixels";
 import { firstIssue } from "@/auth/schemas";
 import {z} from "zod"; 
-import { DrawingView, type PublicDrawingView } from "./drawing-types";
+import { DrawingView, type PublicDrawingView, type PublicDrawingPage } from "./drawing-types";
 import { type DrawingRepository } from "./drawing-repository";
 import { toDrawingView } from "./drawing-mapper";
 
+
+export const DEFAULT_PAGE_SIZE = 12;
+export const MAX_PAGE_SIZE = 50;
+
+/* Holder et tall innenfor et intervall. */
+function clamp(verdi: number, minst: number, mest: number) {
+  if (!Number.isFinite(verdi)) return minst
+  return Math.min(mest, Math.max(minst, Math.floor(verdi)))
+}
 export interface DrawingService {
   createDrawing(userId: string, input: unknown): Promise<Result<{ id: string }>>
   getDrawing(id: string, userId: string | null): Promise<Result<DrawingView>>
   updateDrawing(id: string, userId: string, input: unknown): Promise<Result<void>>
   deleteDrawing(id: string, userId: string): Promise<Result<void>>
 
-  listPublicDrawings(limit: number): Promise<Result<PublicDrawingView[]>>
+  listPublicDrawings(page?: number, limit?: number): Promise<Result<PublicDrawingPage>>
   listPublicDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
   listAllDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
 
@@ -105,19 +114,30 @@ export function createDrawingService(_repository: DrawingRepository): DrawingSer
 
       return ResultHandler.success(undefined)
     },
-    async listPublicDrawings(limit: number): Promise<Result<PublicDrawingView[]>> {
-      if (limit < 1) {
-        limit = 1
-      }
-      else if (limit > 20) {
-        limit = 20
-      }
+    async listPublicDrawings(page = 1, limit = DEFAULT_PAGE_SIZE): Promise<Result<PublicDrawingPage>> {
+      const trygtAntall = clamp(limit, 1, MAX_PAGE_SIZE)
+      const trygtSidetall = Math.max(1, Math.floor(page) || 1)
 
-      const result = await _repository.listPublicDrawings(limit)
+      const total = await _repository.countPublicDrawings()
+      if (!total.ok) return total
+
+      const totalPages = Math.max(1, Math.ceil(total.data / trygtAntall))
+      const side = Math.min(trygtSidetall, totalPages)
+
+      const result = await _repository.listPublicDrawings(
+        trygtAntall,
+        (side - 1) * trygtAntall
+      )
 
       if (!result.ok) return result
-      
-      return ResultHandler.success(result.data)
+
+      return ResultHandler.success({
+        items: result.data,
+        page: side,
+        limit: trygtAntall,
+        total: total.data,
+        totalPages,
+      })
     },
     async listPublicDrawingsByUser(userId: string): Promise<Result<DrawingView[]>> {
       const result = await _repository.listPublicDrawingsByUser(userId)

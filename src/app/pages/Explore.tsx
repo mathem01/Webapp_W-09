@@ -1,9 +1,12 @@
 import type { RequestInfo } from "rwsdk/worker";
 import { ExploreGrid } from "@/components/ExploreGrid";
+import { Pagination } from "@/features/drawings/components/Pagination";
 import { service } from "@/features/drawings/drawing-instances";
 
-export async function Explore({ ctx }: RequestInfo) {
-  const result = await service.listPublicDrawings(20);
+export async function Explore({ ctx, request }: RequestInfo) {
+  const page = Number(new URL(request.url).searchParams.get("page") ?? 1);
+  const result = await service.listPublicDrawings(page);
+
   return (
     <section className="min-h-[calc(100vh-8rem)] bg-neutral-100 px-4 py-6">
       <header className="mx-auto mb-6 max-w-5xl">
@@ -15,7 +18,12 @@ export async function Explore({ ctx }: RequestInfo) {
           <p>Kunne ikke hente tegningene.</p>
           <a href="/explore" className="mt-2 inline-block font-medium underline">Prøv igjen</a>
         </div>
-      ) : <ExploreGrid drawings={result.data} viewerUserId={ctx.session.userId} />}
+      ) : (
+        <>
+          <ExploreGrid drawings={result.data.items} viewerUserId={ctx.session.userId} />
+          <Pagination page={result.data.page} totalPages={result.data.totalPages} />
+        </>
+      )}
     </section>
   );
 }
