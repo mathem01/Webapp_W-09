@@ -35,7 +35,7 @@ export function DrawingOptions({ drawingId, title, isPublic }: Props) {
     try {
       // Offentlig-knappen sender true. Privat-knappen sender false.
       const body = JSON.stringify({ isPublic: shouldBePublic });
-      const url = `/api/v1/drawings/${encodeURIComponent(drawingId)}/visibility`;
+      const url = `/api/v1/drawings/${drawingId}/visibility`;
       const response = await fetch(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -135,3 +135,4 @@ export function DrawingOptions({ drawingId, title, isPublic }: Props) {
     </div>
   );
 }
+
