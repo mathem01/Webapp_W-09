@@ -1,6 +1,6 @@
 import type { RequestInfo } from "rwsdk/worker";
 import { ErrorHttpStatus, Errors, parseJson, ResultHandler, toResponse } from "@/lib/result";
-import { type DrawingService } from "./drawing-service";
+import { type DrawingService, DEFAULT_PAGE_SIZE } from "./drawing-service";
 import { service } from "./drawing-instances";
 import { requireUser } from "@/middleware/guards";
 
@@ -54,20 +54,22 @@ export function createDrawingController(_service: DrawingService): DrawingContro
 
       return toResponse(result);
     },
-    async listPublic({ params }: RequestInfo) {
-      if (!Number.isInteger(params.limit)) {
-        return toResponse(
-          ResultHandler.failure(
-            "Limit må være et heltall",
-            Errors.BAD_REQUEST
-          )
-        )
-      }
+        /* GET /api/v1/drawings?page=2&limit=12
 
-      const result = await _service.listPublicDrawings(params.limit);
+       Sidetall og sidestørrelse er spørringsparametre, ikke del av stien:
+       de er filter på samme ressurs, ikke en annen ressurs. Ugyldige
+       verdier blir til standardverdiene i servicen, ikke 400. */
+    async listPublic({ request }: RequestInfo) {
+      const params = new URL(request.url).searchParams;
+
+      const page = Number(params.get("page") ?? 1);
+      const limit = Number(params.get("limit") ?? DEFAULT_PAGE_SIZE);
+
+      const result = await _service.listPublicDrawings(page, limit);
 
       return toResponse(result);
     },
+    
     async listPublicByUser({ params }: RequestInfo): Promise<Response> {
       const result = await _service.listPublicDrawingsByUser(params.userId);
 

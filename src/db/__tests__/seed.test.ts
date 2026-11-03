@@ -20,11 +20,11 @@ it("feeden får de sju publiserte, ikke utkastet", async () => {
   const db = createTestDb();
   await seedInto(db);
 
-  const r = await serviceFor(db).listPublicDrawings(20);
+  const r = await serviceFor(db).listPublicDrawings(1, 20);
   if (!r.ok) throw new Error("skulle vært ok");
 
-  expect(r.data).toHaveLength(7);
-  expect(r.data.map((d) => d.title)).not.toContain("Utkast, ikke publisert");
+  expect(r.data.items).toHaveLength(7);
+  expect(r.data.items.map((d) => d.title)).not.toContain("Utkast, ikke publisert");
 });
 
 it("eieren ser utkastet sitt, andre gjør ikke", async () => {
@@ -44,10 +44,10 @@ it("hver tegning har like mange piksler som bredde ganger høyde", async () => {
   const db = createTestDb();
   await seedInto(db);
 
-  const r = await serviceFor(db).listPublicDrawings(20);
+  const r = await serviceFor(db).listPublicDrawings(1, 20);
   if (!r.ok) throw new Error("skulle vært ok");
 
-  for (const d of r.data) {
+  for (const d of r.data.items) {
     expect(d.pixels).toHaveLength(d.width * d.height);
   }
 });
@@ -57,8 +57,8 @@ it("kan kjøres to ganger uten å doble dataene", async () => {
   await seedInto(db);
   await seedInto(db);
 
-  const r = await serviceFor(db).listPublicDrawings(20);
+  const r = await serviceFor(db).listPublicDrawings(1, 20);
   if (!r.ok) throw new Error("skulle vært ok");
 
-  expect(r.data).toHaveLength(7);
+  expect(r.data.items).toHaveLength(7);
 });

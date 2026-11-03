@@ -8,6 +8,7 @@ import {
   type DrawingService,
 } from "../drawing-service";
 import { createDrawingRepository } from "../drawing-repository";
+import { MAX_PAGE_SIZE } from "../drawing-service";
 
 const ALICE = "user-alice";
 const BOB = "user-bob";
@@ -423,18 +424,18 @@ describe("drawingService.listPublicDrawings", () => {
       { isPublic: true }
     );
 
-    const result = await service.listPublicDrawings(10);
+    const result = await service.listPublicDrawings(1, 10);
 
     expect(result.ok).toBe(true);
 
     if (result.ok) {
-      expect(result.data.map((item) => item.title)).toEqual([
+      expect(result.data.items.map((item) => item.title)).toEqual([
         "Offentlig",
       ]);
     }
   });
 
-  it("begrenser antallet tegninger til 20", async () => {
+  it("begrenser sidestørrelsen til maks", async () => {
     for (let i = 0; i < 25; i++) {
       const created = await service.createDrawing(
         ALICE,
@@ -452,12 +453,13 @@ describe("drawingService.listPublicDrawings", () => {
       );
     }
 
-    const result = await service.listPublicDrawings(100);
+    const result = await service.listPublicDrawings(1, 100);
 
     expect(result.ok).toBe(true);
 
     if (result.ok) {
-      expect(result.data).toHaveLength(20);
+      expect(result.data.items).toHaveLength(25);
+      expect(result.data.limit).toBe(MAX_PAGE_SIZE);
     }
   });
 });
@@ -566,14 +568,14 @@ it("feeden inkluderer bare offentlige tegninger med riktig eier og følger endre
   const second = await service.createDrawing(BOB, drawing({ title: "Bob privat" }));
   if (!first.ok || !second.ok) throw new Error("Oppretting feilet");
   await service.setDrawingVisibility(first.data.id, ALICE, { isPublic: true });
-  const published = await service.listPublicDrawings(20);
+  const published = await service.listPublicDrawings(1, 20);
   if (!published.ok) throw new Error("Henting feilet");
-  expect(published.data).toHaveLength(1);
-  expect(published.data[0].owner).toEqual({ id: ALICE, username: "alice" });
-  expect(published.data[0]).not.toHaveProperty("email");
-  expect(published.data[0].owner).not.toHaveProperty("email");
+  expect(published.data.items).toHaveLength(1);
+  expect(published.data.items[0].owner).toEqual({ id: ALICE, username: "alice" });
+  expect(published.data.items[0]).not.toHaveProperty("email");
+  expect(published.data.items[0].owner).not.toHaveProperty("email");
   await service.setDrawingVisibility(first.data.id, ALICE, { isPublic: false });
-  const unpublished = await service.listPublicDrawings(20);
+  const unpublished = await service.listPublicDrawings(1, 20);
   if (!unpublished.ok) throw new Error("Henting feilet");
-  expect(unpublished.data).toHaveLength(0);
+  expect(unpublished.data.items).toHaveLength(0);
 });

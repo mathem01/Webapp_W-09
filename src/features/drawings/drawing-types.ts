@@ -16,3 +16,13 @@ export type DrawingView = {
 export type PublicDrawingView = DrawingView & {
   owner: { id: string; username: string };
 };
+
+/* Én side med tegninger, pluss det siden trenger for å tegne
+   neste og forrige. */
+export type PublicDrawingPage = {
+  items: PublicDrawingView[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
