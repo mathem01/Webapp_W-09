@@ -1,6 +1,6 @@
 // Selve testdataene. Ligger for seg selv, uten import fra rwsdk, så
 // filen kan brukes både av seed-skriptet og av testene.
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import { drawings, user } from "./schema";
 import { createDrawingRepository } from "@/features/drawings/drawing-repository";
@@ -206,14 +206,14 @@ const SEED_USERS = [
  * tilgangsreglene mot, så ikke alt er publisert.
  */
 const SEED_DRAWINGS = [
-  { userId: "58zSBSWfpvmglWPByRTb6kZfOhAhskxF", title: "Smilefjes", isPublic: true, ...fromPattern(SMILEFJES) },
-  { userId: "58zSBSWfpvmglWPByRTb6kZfOhAhskxF", title: "Hjerte", isPublic: true, ...fromPattern(HJERTE) },
-  { userId: "58zSBSWfpvmglWPByRTb6kZfOhAhskxF", title: "Utkast, ikke publisert", isPublic: false, ...fromPattern(STJERNE) },
-  { userId: "58zSBSWfpvmglWPByRTb6kZfOhAhskxF", title: "Pil opp", isPublic: true, ...fromPattern(PIL_OPP) },
-  { userId: "58zSBSWfpvmglWPByRTb6kZfOhAhskxF", title: "Norsk flagg", isPublic: true, ...fromPattern(FLAGG) },
-  { userId: "58zSBSWfpvmglWPByRTb6kZfOhAhskxF", title: "Sjakkbrett", isPublic: true, ...sjakkbrett() },
-  { userId: "58zSBSWfpvmglWPByRTb6kZfOhAhskxF", title: "Blomst", isPublic: true, ...fromPattern(BLOMST) },
-  { userId: "58zSBSWfpvmglWPByRTb6kZfOhAhskxF", title: "Spøkelse", isPublic: true, ...fromPattern(SPOKELSE) },
+  { userId: "seed-alice", title: "Smilefjes", isPublic: true, ...fromPattern(SMILEFJES) },
+  { userId: "seed-alice", title: "Hjerte", isPublic: true, ...fromPattern(HJERTE) },
+  { userId: "seed-alice", title: "Utkast, ikke publisert", isPublic: false, ...fromPattern(STJERNE) },
+  { userId: "seed-bjorn", title: "Pil opp", isPublic: true, ...fromPattern(PIL_OPP) },
+  { userId: "seed-bjorn", title: "Norsk flagg", isPublic: true, ...fromPattern(FLAGG) },
+  { userId: "seed-bjorn", title: "Sjakkbrett", isPublic: true, ...sjakkbrett() },
+  { userId: "seed-cecilie", title: "Blomst", isPublic: true, ...fromPattern(BLOMST) },
+  { userId: "seed-cecilie", title: "Spøkelse", isPublic: true, ...fromPattern(SPOKELSE) },
 ];
 
 /**
@@ -224,11 +224,14 @@ const SEED_DRAWINGS = [
  */
 export async function seedInto(db: DB) {
   // Tøm først, så seed kan kjøres om igjen uten å doble alt.
-  await db.delete(drawings);
+  await db.delete(drawings).where(
+    inArray(drawings.userId,["seed-alice","seed-bjorn","seed-cecilie"])
+
+  );
   //await db.delete(user);
 
   // Brukerne må inn før tegningene: fremmednøkkelen krever at de finnes.
-  //await db.insert(user).values(SEED_USERS);
+  await db.insert(user).values(SEED_USERS).onConflictDoNothing();
 
     /* Bygger servicen av databasen vi fikk inn, så seed kan kjøres både mot
      D1 og mot en database i minnet i testene. */
