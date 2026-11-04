@@ -4,8 +4,11 @@ import { Pagination } from "@/features/drawings/components/Pagination";
 import { service } from "@/features/drawings/drawing-instances";
 
 export async function Explore({ ctx, request }: RequestInfo) {
-  const page = Number(new URL(request.url).searchParams.get("page") ?? 1);
-  const result = await service.listPublicDrawings(page);
+  const url = new URL(request.url);
+  const page = Number(url.searchParams.get("page") ?? 1);
+  const limit = Number(url.searchParams.get("limit") ?? 12);
+  const result = await service.listPublicDrawings(page, limit);
+
 
   return (
     <section className="min-h-[calc(100vh-8rem)] bg-neutral-100 px-4 py-6">
@@ -21,7 +24,7 @@ export async function Explore({ ctx, request }: RequestInfo) {
       ) : (
         <>
           <ExploreGrid drawings={result.data.items} viewerUserId={ctx.session.userId} />
-          <Pagination page={result.data.page} totalPages={result.data.totalPages} />
+          <Pagination page={result.data.page} totalPages={result.data.totalPages} limit={result.data.limit} />
         </>
       )}
     </section>
