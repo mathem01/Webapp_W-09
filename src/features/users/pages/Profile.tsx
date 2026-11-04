@@ -1,8 +1,9 @@
 import type { RequestInfo } from "rwsdk/worker";
 import { service as userService } from "../user-service";
-import { service as drawingService } from "@/features/drawings/drawing-service";
 import { ProfileHeader } from "../components/ProfileHeader";
 import { ProfileDrawings } from "../components/ProfileDrawings";
+import { Suspense } from "react";
+import { DrawingGridSkeleton } from "@/features/drawings/components/DrawingGridSkeleton";
 
 export async function Profile({ params, request }: RequestInfo) {
   const username = params.username;
@@ -24,7 +25,6 @@ export async function Profile({ params, request }: RequestInfo) {
   }
 
   const profile = result.data;
-  const drawings = await drawingService.listPublicDrawingsByUser(profile.id);
 
   return (
     <section className="min-h-[80vh] bg-gray-50 px-4 py-10 sm:px-6">
@@ -34,7 +34,17 @@ export async function Profile({ params, request }: RequestInfo) {
           <p className="mt-2 text-sm text-gray-500">Se de offentlige tegningene til @{profile.username}.</p>
         </header>
         <ProfileHeader profile={profile} />
-        <ProfileDrawings result={drawings} />
+
+        <section aria-labelledby="drawings-heading" className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+          <header className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">Offentlige tegninger</h2>
+            <p className="mt-1 text-sm text-gray-500">Her vises tegningene brukeren har publisert.</p>
+          </header>
+
+          <Suspense fallback={<DrawingGridSkeleton />}>
+            <ProfileDrawings userId={profile.id} />
+          </Suspense>
+        </section>
       </div>
     </section>
   );

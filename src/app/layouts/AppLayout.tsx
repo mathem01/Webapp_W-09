@@ -12,7 +12,7 @@ export function AppLayout({ children, requestInfo }: LayoutProps) {
       <header>
         <nav className="flex items-center gap-3 border-b bg-white px-6 py-4 text-sm font-semibold [&_a]:rounded [&_a]:px-3 [&_a]:py-1 [&_a]:transition [&_a:hover]:bg-slate-200">
         <a href="/" className="text-xl font-bold">DrawIt</a>
-        <a href="/drawing">Tegne</a>
+        <a href="/canvas">Tegne</a>
         <a href="/explore">Utforske</a>
 
         <form action="/explore" className="flex ml-auto gap-2 bg-slate-200 px-3 py-2 transition hover:bg-slate-300 focus-within:bg-white">
