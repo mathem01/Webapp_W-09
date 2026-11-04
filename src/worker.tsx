@@ -18,7 +18,7 @@ import { Login } from "@/app/pages/Login";
 import { Profile } from "@/features/users/pages/Profile";
 import { userRoutes } from "@/features/users/user-routes";
 import { MyPage } from "@/app/pages/MyPage";
-import { Canvas } from "@/app/pages/Canvas";
+import { Canvas } from "@/features/drawings/pages/Canvas";
 import { Admin } from "@/app/pages/Admin";
 import { drawingRoutes } from "@/features/drawings/drawing-routes";
 
