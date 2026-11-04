@@ -1,12 +1,12 @@
 "use server";
 
 import { ErrorResponse, requestInfo } from "rwsdk/worker";
-import { z } from "zod";
+
 
 import { requireUser } from "@/middleware/guards";
 import { service } from "@/features/drawings/drawing-service";
 import { Errors, ServerResult, ResultError, ResultHandler, ServerResultHandler } from "@/lib/result";
-import { DrawingInput } from "./drawing-schema";
+import { type DrawingInput, visibilityFormSchema } from "./drawing-schema";
 import { demoDelay } from "@/lib/demo-chaos";
 
 export type SaveDrawingState = {
@@ -127,10 +127,7 @@ type VisibilityState = {
   error: string | null;
 };
 
-const visibilityFormSchema = z.object({
-  drawingId: z.string().min(1),
-  isPublic: z.enum(["true", "false"]),
-});
+
 
 export async function changeVisibility(
   previousState: VisibilityState,
@@ -166,3 +163,4 @@ export async function changeVisibility(
     };
   }
 }
+

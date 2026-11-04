@@ -36,3 +36,9 @@ export const drawingVisibilitySchema = z.object({
 export function firstIssue(error: z.ZodError) {
   return error.issues[0] ? error.issues[0].message : "Ugyldig input";
 }
+
+export const visibilityFormSchema = z.object({
+  drawingId: z.string().min(1),
+  isPublic: z.enum(["true", "false"]),
+});
+
