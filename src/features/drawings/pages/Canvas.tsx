@@ -10,6 +10,6 @@ const initialDrawing: DrawingInput = {
 
 export function Canvas() {
   return (
-    <DrawingEditor initialDrawing={initialDrawing} />
+    <DrawingEditor initialDrawing={initialDrawing} initialDrawingId={null} />
   );
 }

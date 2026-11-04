@@ -27,9 +27,18 @@ export function useDrawingEditor(initial: DrawingInput) {
     const [drawing, setDrawing] = useState(initial);
     const drawingRef = useRef(initial);
     const strokeRef = useRef<Stroke | null>(null);
+    const [revision, setRevision] = useState(0);
 
     const [selectedTool, setTool] = useState<DrawingTool>("pencil");
     const [selectedColor, setColor] = useState("#000000");
+
+    function getDrawing(): DrawingInput {
+        return drawingRef.current;
+    }
+
+    function markChanged() {
+        setRevision((previous) => previous + 1);
+    }
 
     function updateTitle(title: string) {
         const current = drawingRef.current;
@@ -42,6 +51,7 @@ export function useDrawingEditor(initial: DrawingInput) {
             };
 
             setDrawing(drawingRef.current)
+            markChanged()
         }
     }
 
@@ -61,6 +71,7 @@ export function useDrawingEditor(initial: DrawingInput) {
 
         drawingRef.current = next;
         setDrawing(next);
+        markChanged();
     }
 
     function applyPixels(indices: number[], color: PixelColor): PixelUpdate[] {
@@ -163,11 +174,14 @@ export function useDrawingEditor(initial: DrawingInput) {
 
         if (stroke.changed) {
             setDrawing(drawingRef.current);
+            markChanged();
         }
     }
 
     return {
         drawing,
+        getDrawing,
+        revision,
         selectedTool,
         setTool,
         selectedColor,
@@ -180,6 +194,4 @@ export function useDrawingEditor(initial: DrawingInput) {
     };
 }
 
-export type DrawingEditorState = ReturnType<
-    typeof useDrawingEditor
->;
+export type DrawingEditorState = ReturnType<typeof useDrawingEditor>;
