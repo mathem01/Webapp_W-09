@@ -1,6 +1,6 @@
 import type { RequestInfo } from "rwsdk/worker";
 import { service as userService } from "../user-service";
-import { service as drawingService } from "@/features/drawings/drawing-instances";
+import { service as drawingService } from "@/features/drawings/drawing-service";
 import { ProfileHeader } from "../components/ProfileHeader";
 import { ProfileDrawings } from "../components/ProfileDrawings";
 

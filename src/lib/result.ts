@@ -26,6 +26,10 @@ export type Result<T> =
   | { ok: true; data: T }
   | { ok: false; error: ResultError };
 
+ export type ServerResult<T, U extends Record<string, unknown> = Record<string, unknown>> =
+  | (Extract<Result<T>, { ok: true }>)
+  | (Extract<Result<T>, { ok: false }> & { state: U });
+
 export const ResultHandler = {
   success: <T>(data: T): Result<T> => ({ ok: true, data }),
 
@@ -34,6 +38,19 @@ export const ResultHandler = {
     code: ErrorCode = Errors.INTERNAL_SERVER_ERROR,
     fieldErrors?: ResultError["fieldErrors"],
   ): Result<T> => ({ ok: false, error: { code, message, fieldErrors } }),
+};
+
+export const ServerResultHandler = {
+  success: <T, U extends Record<string, unknown> = Record<string, unknown>>(
+    data: T
+  ): ServerResult<T, U> => ({ ok: true, data }),
+
+  failure: <T = never, U extends Record<string, unknown> = Record<string, unknown>>(
+    message: string,
+    code: ErrorCode = Errors.INTERNAL_SERVER_ERROR,
+    state: U,
+    fieldErrors?: ResultError["fieldErrors"],
+  ): ServerResult<T, U> => ({ ok: false, error: { code, message, fieldErrors }, state }),
 };
 
 export async function executeDbOperation<T>(

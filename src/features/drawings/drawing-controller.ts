@@ -1,7 +1,7 @@
 import type { RequestInfo } from "rwsdk/worker";
 import { ErrorHttpStatus, Errors, parseJson, ResultHandler, toResponse } from "@/lib/result";
 import { type DrawingService, DEFAULT_PAGE_SIZE } from "./drawing-service";
-import { service } from "./drawing-instances";
+import { service } from "./drawing-service";
 import { requireUser } from "@/middleware/guards";
 
 export interface DrawingController {

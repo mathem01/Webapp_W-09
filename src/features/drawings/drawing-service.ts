@@ -4,7 +4,7 @@ import { serializePixels, deserializePixels } from "@/features/drawings/utils/pi
 import { firstIssue } from "@/auth/schemas";
 import {z} from "zod"; 
 import { DrawingView, type PublicDrawingView, type PublicDrawingPage } from "./drawing-types";
-import { type DrawingRepository } from "./drawing-repository";
+import { repository, type DrawingRepository } from "./drawing-repository";
 import { toDrawingView } from "./drawing-mapper";
 
 
@@ -12,9 +12,9 @@ export const DEFAULT_PAGE_SIZE = 12;
 export const MAX_PAGE_SIZE = 50;
 
 /* Holder et tall innenfor et intervall. */
-function clamp(verdi: number, minst: number, mest: number) {
-  if (!Number.isFinite(verdi)) return minst
-  return Math.min(mest, Math.max(minst, Math.floor(verdi)))
+function clamp(value: number, min: number, max: number) {
+  if (!Number.isFinite(value)) return min
+  return Math.min(max, Math.max(min, Math.floor(value)))
 }
 export interface DrawingService {
   createDrawing(userId: string, input: unknown): Promise<Result<{ id: string }>>
@@ -156,18 +156,18 @@ export function createDrawingService(_repository: DrawingRepository): DrawingSer
       return ResultHandler.success(undefined)
     },
     async listPublicDrawings(page = 1, limit = DEFAULT_PAGE_SIZE): Promise<Result<PublicDrawingPage>> {
-      const trygtAntall = clamp(limit, 1, MAX_PAGE_SIZE)
-      const trygtSidetall = Math.max(1, Math.floor(page) || 1)
+      const safeAmount = clamp(limit, 1, MAX_PAGE_SIZE)
+      const safePageNum = Math.max(1, Math.floor(page) || 1)
 
       const total = await _repository.countPublicDrawings()
       if (!total.ok) return total
 
-      const totalPages = Math.max(1, Math.ceil(total.data / trygtAntall))
-      const side = Math.min(trygtSidetall, totalPages)
+      const totalPages = Math.max(1, Math.ceil(total.data / safeAmount))
+      const side = Math.min(safePageNum, totalPages)
 
       const result = await _repository.listPublicDrawings(
-        trygtAntall,
-        (side - 1) * trygtAntall
+        safeAmount,
+        (side - 1) * safeAmount
       )
 
       if (!result.ok) return result
@@ -175,7 +175,7 @@ export function createDrawingService(_repository: DrawingRepository): DrawingSer
       return ResultHandler.success({
         items: result.data,
         page: side,
-        limit: trygtAntall,
+        limit: safeAmount,
         total: total.data,
         totalPages,
       })
@@ -220,6 +220,7 @@ export function createDrawingService(_repository: DrawingRepository): DrawingSer
   }
 }
 
+export const service = createDrawingService(repository);
 
 
 
