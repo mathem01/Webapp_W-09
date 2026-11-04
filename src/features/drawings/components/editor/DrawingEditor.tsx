@@ -8,6 +8,7 @@ import { DrawingToolbar } from "./DrawingToolbar";
 import { DrawingMenuBar } from "./DrawingMenuBar";
 import { DrawingStatusBar } from "./DrawingStatusBar";
 import { useDrawingAutosave } from "../../hooks/useDrawingAutosave";
+import { useEffect } from "react";
 
 type Props = {
   initialDrawing: DrawingInput;
@@ -21,6 +22,16 @@ export function DrawingEditor({ initialDrawing, initialDrawingId }: Props) {
         revision: editor.revision,
         initialDrawingId,
     });
+
+  useEffect(() => {
+        if (initialDrawingId !== null) return;
+        if (!autosave.drawingId) return;
+
+        const url = new URL(window.location.href);
+        url.pathname = `/canvas/${encodeURIComponent(autosave.drawingId)}`;
+        window.history.replaceState(window.history.state, "", url);
+        
+    }, [initialDrawingId, autosave.drawingId]);
 
   return (
     <section className="flex h-[80vh] min-h-[32rem] flex-col overflow-hidden border bg-white text-sm">

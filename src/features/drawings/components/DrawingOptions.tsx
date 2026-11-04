@@ -22,7 +22,7 @@ export function DrawingOptions({ drawingId, title, isPublic }: Props) {
     }}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <a href={`/drawing/${encodeURIComponent(drawingId)}`} className="block break-words text-sm font-medium text-gray-900 hover:underline">{title}</a>
+          <a href={`/canvas/${encodeURIComponent(drawingId)}`} className="block break-words text-sm font-medium text-gray-900 hover:underline">{title}</a>
           <p aria-live="polite" className="mt-1 text-xs text-gray-600">
             {state.visibility ? "Offentlig" : "Privat"}
           </p>

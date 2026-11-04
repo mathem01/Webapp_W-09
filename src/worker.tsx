@@ -83,6 +83,7 @@ const app = defineApp([
 
         // Users-Only
         route("/myPage", [requireAuth, MyPage]),
+        route("/canvas", [requireAuth, Canvas]),
         route("/canvas/:id", [requireAuth, Canvas]),
 
         // Admin-Only
