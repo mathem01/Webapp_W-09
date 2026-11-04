@@ -27,12 +27,8 @@ export async function deleteDrawing(id: string) {
   return service.deleteDrawing(id, user.id);
 }
 
-export async function publishDrawing(id: string) {
+export async function setDrawingVisibility(drawingId: string, isPublic: boolean) {
   const user = currentUser();
-  return service.setDrawingVisibility(id, user.id, {isPublic:true});
+  return service.setDrawingVisibility(drawingId, user.id, { isPublic });
 }
 
-export async function unpublishDrawing(id: string) {
-  const user = currentUser();
-  return service.setDrawingVisibility(id, user.id, {isPublic:false});
-}
