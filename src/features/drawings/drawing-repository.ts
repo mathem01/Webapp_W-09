@@ -1,4 +1,4 @@
-import { type DB } from "@/db";
+import { type DB, db } from "@/db";
 import { type Drawing, drawings, user } from "@/db/schema";
 import { eq, desc, and, or, count } from "drizzle-orm";
 import { drawingInputSchema, type DrawingInput } from "@/features/drawings/drawing-schema";
@@ -180,4 +180,4 @@ export function createDrawingRepository(_db: DB): DrawingRepository {
     };
 }
 
-
+export const repository = createDrawingRepository(db);

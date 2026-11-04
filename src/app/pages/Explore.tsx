@@ -1,7 +1,7 @@
 import type { RequestInfo } from "rwsdk/worker";
 import { ExploreGrid } from "@/components/ExploreGrid";
 import { Pagination } from "@/features/drawings/components/Pagination";
-import { service } from "@/features/drawings/drawing-instances";
+import { service } from "@/features/drawings/drawing-service";
 
 export async function Explore({ ctx, request }: RequestInfo) {
   const url = new URL(request.url);
