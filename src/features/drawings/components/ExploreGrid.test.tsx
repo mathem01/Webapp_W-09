@@ -25,7 +25,7 @@ it("viser tegningen, åpner detaljene og lenker til eierens profil", async () =>
   await user.click(openButton);
 
   expect(screen.getByRole("dialog", { name: "Mitt hjerte" })).toBeInTheDocument();
-  expect(screen.getByRole("textbox", { name: "Skriv en kommentar" })).toBeDisabled();
+  expect(screen.getByRole("textbox", { name: "Skriv en kommentar" })).toBeEnabled();
 });
 
 it("sender en annen innlogget bruker til eierens offentlige profil", () => {
