@@ -206,17 +206,6 @@ Playwright bruker lastes ned:
 pnpm exec playwright install chromium
 ```
 
-E2E-testen logger inn med en vanlig testbruker. Sett derfor inn en bruker som
-allerede finnes i den lokale databasen. I PowerShell kan det gjøres slik:
-
-```powershell
-$env:E2E_EMAIL="din-testbruker@example.com"
-$env:E2E_PASSWORD="testbrukerens-passord"
-```
-
-Disse verdiene gjelder bare i det åpne terminalvinduet og skal ikke legges i
-GitHub. Hvis de mangler, stopper testen med en tydelig feilmelding.
-
 Etter det kan E2E-testene kjøres med:
 
 ```bash
@@ -225,8 +214,8 @@ pnpm test:e2e
 
 Playwright starter utviklingsserveren selv gjennom `playwright.config.ts`.
 Hvis en server allerede kjører på port 5173, kan Playwright bruke den. E2E-
-testene ligger i `e2e/` og skal teste en hel brukerflyt, ikke bare en enkelt
-komponent.
+testene ligger i `e2e/` og tester en hel brukerflyt, ikke bare en enkelt
+komponent. Testen registrerer en unik bruker og går gjennom hovedflyten i appen.
 
 ## Valg vi har tatt
 
