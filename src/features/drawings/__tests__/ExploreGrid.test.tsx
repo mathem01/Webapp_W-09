@@ -2,7 +2,7 @@
 import { expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ExploreGrid } from "./ExploreGrid";
+import { ExploreGrid } from "../components/ExploreGrid";
 import type { PublicDrawingView } from "@/features/drawings/drawing-types";
 
 const drawing: PublicDrawingView = {
@@ -25,7 +25,7 @@ it("viser tegningen, åpner detaljene og lenker til eierens profil", async () =>
   await user.click(openButton);
 
   expect(screen.getByRole("dialog", { name: "Mitt hjerte" })).toBeInTheDocument();
-  expect(screen.getByRole("textbox", { name: "Skriv en kommentar" })).toBeDisabled();
+  expect(screen.getByRole("textbox", { name: "Skriv en kommentar" })).toBeEnabled();
 });
 
 it("sender en annen innlogget bruker til eierens offentlige profil", () => {
