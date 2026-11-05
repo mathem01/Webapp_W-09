@@ -1,201 +1,208 @@
-# Startprosjekt · Webapplikasjoner 2026
+# DrawIt
 
-Et ferdig oppsett dere kan bygge prosjektet deres på. Alt dere trenger gjennom
-hele semesteret er installert og satt opp, så dere slipper å installere pakker
-midt i en oppgave.
+DrawIt er en webapplikasjon hvor brukere kan lage pikseltegninger rett i nettleseren. En bruker kan registrere seg, velge tittel og størrelse på tegningen, tegne på et canvas og lagre tegningen på sin egen side. Tegninger kan være private eller publiseres slik at andre kan finne dem på utforsk-siden.
 
-RedwoodSDK · React 19 · Vite 8 · TypeScript 7 · Tailwind 4 · Drizzle + D1 ·
-Zod 4 · Vitest · Playwright · Cloudflare Workers
+Prosjektet er laget i gruppe i emnet Webapplikasjoner (ITF31619).
 
----
+## Hovedflyten
 
-## Krav
+Den viktigste flyten i appen er:
 
-| | Versjon | Sjekk med |
-| --- | --- | --- |
-| Node.js | **22.12 eller nyere**, 24 anbefalt | `node -v` |
-| npm eller pnpm | npm 11+, eller pnpm 10.16+ | `npm -v` / `pnpm -v` |
+1. Brukeren registrerer seg eller logger inn.
+2. På **Min side** trykker brukeren på **Ny tegning** og velger tittel, bredde og høyde.
+3. Serveren oppretter tegningen og sender brukeren videre til canvaset.
+4. Når brukeren tegner, blir endringene lagret i databasen.
+5. Tegningen vises på **Min side**, hvor den kan gjøres privat eller offentlig og slettes.
+6. Offentlige tegninger vises på **Utforsk**, mens private tegninger bare vises for eieren.
 
-Prosjektet virker med **begge** pakkebehandlerne. Velg én og bruk den hele
-semesteret. Ikke bland dem i samme prosjekt.
+## Teknologi
 
-Cloudflare-konto trengs ikke for å komme i gang. Databasen kjører lokalt.
+- RedwoodSDK og React
+- TypeScript
+- Tailwind CSS
+- Cloudflare Workers og D1
+- Drizzle ORM
+- Better Auth
+- Zod
+- Vitest og Testing Library
+- Playwright
 
----
+## Starte prosjektet lokalt
 
-## Kom i gang
+Du trenger Node.js 22.12 eller nyere og pnpm.
+
+Installer pakkene:
 
 ```bash
-npm install        # eller: pnpm install
-npm run dev        # eller: pnpm dev
+pnpm install
 ```
 
-Åpne `http://localhost:5173`.
+Kopier `.dev.vars.example` til en ny fil som heter `.dev.vars`. Legg inn en hemmelig nøkkel og URL-en som Better Auth skal bruke:
 
-Vil dere ha databasen i gang med en gang:
+```env
+BETTER_AUTH_SECRET="en-lang-tilfeldig-hemmelighet"
+BETTER_AUTH_URL="http://localhost:5173"
+```
+
+En tilfeldig nøkkel kan lages med:
 
 ```bash
-npm run migrate:dev    # lager tabellene i den lokale databasen
-npm run seed           # legger inn litt testdata
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-**Velg én lockfil.** Repoet har både `package-lock.json` (npm) og
-`pnpm-lock.yaml` (pnpm), så begge virker rett ut av boksen. Slett den dere ikke
-bruker, så kan de ikke komme i utakt.
+Opprett tabellene i den lokale databasen:
 
----
-
-## Hva som ligger her
-
-```
-src/
-├─ worker.tsx              inngangspunktet. Her registreres alle ruter
-├─ client.tsx              starter React i nettleseren
-├─ app/
-│  ├─ Document.tsx         HTML-skallet rundt alle sider
-│  ├─ headers.ts           sikkerhetsheadere, blant annet CSP
-│  ├─ styles.css           én linje: @import "tailwindcss"
-│  └─ pages/Home.tsx       forsiden. En server-komponent
-├─ components/
-│  ├─ Counter.tsx          en klient-komponent ("use client")
-│  ├─ TimeClient.tsx       samme klokke, men rendret i nettleseren
-│  └─ __tests__/           komponenttest med Testing Library
-├─ db/
-│  ├─ schema/              tabellene. Eksempel: users og tasks
-│  ├─ relations.ts         relasjonene mellom tabellene
-│  ├─ index.ts             databaseklienten
-│  └─ seed.ts              testdata
-├─ lib/id.ts               createId(), en id-generator
-└─ test/setup-dom.ts       kjøres før hver testfil
-
-e2e/                       Playwright-tester i ekte nettleser
-drizzle/migrations/        én mappe per migrasjon. Slett aldri en gammel
-public/                    statiske filer
+```bash
+pnpm migrate:dev
 ```
 
-Konfigurasjonen ligger i rota: `wrangler.jsonc` (hva appen har tilgang til),
-`vite.config.mts`, `vitest.config.ts`, `playwright.config.ts`,
-`drizzle.config.ts` og `tsconfig.json`.
+Legg inn testdata hvis du ønsker det:
 
-**Tabellene i `src/db/schema/` er et eksempel.** Bytt dem ut med deres egen
-datamodell, kjør `npm run migrate:new`, og dere har en ny migrasjon.
+```bash
+pnpm seed
+```
 
----
+Start utviklingsserveren:
+
+```bash
+pnpm dev
+```
+
+Appen åpnes på `http://localhost:5173`.
 
 ## Kommandoer
 
 | Kommando | Hva den gjør |
 | --- | --- |
-| `npm run dev` | utviklingsserver på port 5173 |
-| `npm run lint` | typesjekk med TypeScript |
-| `npm test` | kjører testene én gang |
-| `npm run test:watch` | kjører testene på nytt når dere lagrer |
-| `npm run test:e2e` | Playwright i ekte nettleser |
-| `npm run migrate:new` | lager en migrasjon fra `src/db/schema/` |
-| `npm run migrate:dev` | kjører migrasjonene mot den lokale databasen |
-| `npm run seed` | legger inn testdata |
-| `npm run generate` | oppdaterer typene etter endring i `wrangler.jsonc` |
-| `npm run build` | bygger for produksjon |
+| `pnpm dev` | Starter utviklingsserveren |
+| `pnpm lint` | Kjører TypeScript-sjekken |
+| `pnpm test` | Kjører testene med Vitest |
+| `pnpm test:e2e` | Kjører Playwright-testene |
+| `pnpm migrate:new` | Lager en ny migrasjon etter en skjemaendring |
+| `pnpm migrate:dev` | Kjører migrasjonene mot lokal D1 |
+| `pnpm seed` | Fyller den lokale databasen med testdata |
+| `pnpm build` | Bygger prosjektet |
 
-Bruker dere pnpm, dropp `run`: `pnpm dev`, `pnpm lint`, `pnpm test`.
+## Hvordan koden er organisert
 
----
+```text
+src/
+├── worker.tsx                         ruter og middleware
+├── middleware/                        session og tilgangskontroll
+├── auth/                              valideringsregler for innlogging
+├── app/
+│   ├── pages/                         sidene i appen
+│   ├── layouts/                       felles layout og navigasjon
+│   └── headers.ts                     sikkerhetsheadere
+├── features/
+│   ├── drawings/
+│   │   ├── components/                tegnekomponenter og grensesnitt
+│   │   ├── pages/Canvas.tsx           canvas-siden
+│   │   ├── actions.ts                 server actions
+│   │   ├── drawing-routes.ts          REST-ruter
+│   │   ├── drawing-controller.ts      HTTP inn og ut
+│   │   ├── drawing-service.ts         regler og autorisasjon
+│   │   ├── drawing-repository.ts      lesing og lagring i databasen
+│   │   ├── drawing-mapper.ts          formen på data ut av datalaget
+│   │   └── drawing-schema.ts          Zod-regler og TypeScript-typer
+│   └── users/                          brukerprofil gjennom samme lagdeling
+├── db/
+│   ├── schema/                         tabellene for auth og tegninger
+│   ├── relations.ts                    relasjonene mellom tabellene
+│   ├── seed.ts                         kjøring av seed
+│   └── seed-data.ts                    testdata
+└── test/                               felles testoppsett
 
-## Databasen
-
-Databasen er **D1**, som er SQLite hos Cloudflare. Lokalt er den bare en fil
-under `.wrangler/`, så dere trenger ingen konto for å jobbe.
-
-Slik endrer dere datamodellen:
-
-1. Endre eller legg til en tabell i `src/db/schema/`
-2. `npm run migrate:new` lager en migrasjonsfil
-3. `npm run migrate:dev` kjører den mot den lokale databasen
-
-En migrasjon er en dagbok: dere **legger til** en ny, og redigerer aldri en som
-har kjørt. Har databasen havnet i en rar tilstand, slett `.wrangler/` og kjør
-migrasjonene og seed på nytt.
-
----
-
-## Tester
-
-Det er to slags tester i prosjektet, og de svarer på hver sine spørsmål.
-
-**Vitest** er den dere bruker hele tiden. Rask, kjører i terminalen.
-
-```bash
-npm test
-npm run test:watch
+drizzle/migrations/                     SQL-migrasjoner
+e2e/                                    Playwright-tester
 ```
 
-Vanlige tester kjører i Node. Skal testen rendre en komponent, må fila ha denne
-linja helt øverst:
+## Arkitekturen
 
-```ts
-// @vitest-environment happy-dom
+Tegnefunksjonen er delt opp i lag:
+
+```text
+request → route → controller → service → repository → D1-database
 ```
 
-Se `src/components/__tests__/Counter.test.tsx` for et eksempel med klikk.
+- **Route** kobler URL og HTTP-metode til riktig controller.
+- **Controller** leser requesten og lager et HTTP-svar.
+- **Service** validerer data og håndhever reglene, blant annet hvem som eier tegningen.
+- **Repository** er laget som snakker direkte med databasen.
 
-**Playwright** starter en ekte nettleser og klikker seg gjennom appen. Tregere,
-så bruk den på de viktige flytene.
+Server actions bruker den samme servicen som REST-endepunktene. På den måten ligger reglene på ett sted selv om data kan komme inn på forskjellige måter.
 
-```bash
-npx playwright install chromium   # bare første gang
-npm run test:e2e
-```
+## REST-endepunkter
 
----
-
-## Windows
-
-Alt virker på Windows, men noen kommandoer skrives annerledes i PowerShell.
-Enkleste løsning: installer [Git for Windows](https://gitforwindows.org/) og
-kjør alt i **Git Bash**.
-
-Ellers:
-
-- Installer Node med [fnm](https://github.com/Schniz/fnm) eller
-  [nvm-windows](https://github.com/coreybutler/nvm-windows), ikke fra Microsoft
-  Store
-- Legg prosjektet på en kort sti, for eksempel `C:\dev\`, og **ikke** i OneDrive.
-  Synkronisering låser filer i `node_modules` og `.wrangler`
-- `git config --global core.autocrlf input`
-- Er noe veldig tregt, legg `node_modules`, `.wrangler` og `.vite` som unntak i
-  Windows Defender
-
----
-
-## Når noe ikke virker
-
-| Problem | Løsning |
+| Metode og URL | Bruk |
 | --- | --- |
-| Porten er opptatt | Noe annet kjører på 5173. Stopp det, eller kjør `npm run dev -- --port 5174` |
-| `npm run dev` starter ikke etter install | Installasjonen hoppet over byggesteg. Kjør install på nytt, og se etter en advarsel om install-scripts |
-| TypeScript finner ikke `env.DB` | `npm run generate` |
-| «No migrations to apply» | Dere står i feil mappe, eller migrasjonen er ikke laget ennå |
-| Testene klager på `better-sqlite3` | Slett `node_modules`, installer på nytt |
-| Rare feil etter en oppdatering | `npm run clean`, så start dev-serveren på nytt |
-| Databasen er i en rar tilstand | Slett `.wrangler/`, kjør `migrate:dev` og `seed` |
-| Playwright finner ingen nettleser | `npx playwright install chromium` |
+| `GET /api/v1/drawings` | Henter offentlige tegninger |
+| `POST /api/v1/drawings` | Oppretter en tegning |
+| `GET /api/v1/drawings/:drawingId` | Henter én tegning |
+| `PATCH /api/v1/drawings/:drawingId` | Oppdaterer en tegning |
+| `DELETE /api/v1/drawings/:drawingId` | Sletter en tegning |
+| `PATCH /api/v1/drawings/:drawingId/visibility` | Endrer mellom privat og offentlig |
+| `GET /api/v1/me/drawings` | Henter tegningene til innlogget bruker |
+| `GET /api/v1/users/:userId/drawings` | Henter offentlige tegninger fra en bruker |
 
----
+Ruter som oppretter, endrer eller sletter data er beskyttet på serveren. Det holder derfor ikke å bare skjule en knapp i grensesnittet. Serveren sjekker session og eierskap før endringen utføres.
 
-## Om versjonene
+## Server actions
 
-Alle pakker er låst til **eksakte** versjoner, uten `^` og `~`. Det er med
-vilje: da har alle på gruppa nøyaktig det samme, og en oppdatering midt i
-semesteret kan ikke ødelegge noe som virket i går.
+Vi bruker server actions sammen med `useActionState` til handlinger som kommer fra skjemaer i grensesnittet:
 
-To ting er verdt å vite hvis dere spør en KI-modell om hjelp:
+- Opprette en ny tegning.
+- Lagre endringer i canvaset.
+- Endre en tegning mellom privat og offentlig.
+- Slette en tegning.
 
-- **Drizzle.** Vi bruker versjon 1, som ligger under `rc` hos npm. Det npm
-  kaller `latest` er fortsatt versjon 0, med et helt annet API. «Oppdater til
-  siste» er altså en nedgradering her.
-- **Tailwind 4.** All konfigurasjon skjer i CSS, i en `@theme`-blokk. Foreslår
-  modellen en `tailwind.config.js`, svarer den for versjon 3.
+Skjemadata blir behandlet på serveren, og brukeren hentes fra den gyldige sessionen. Data som kommer utenfra valideres før den blir sendt videre til repository-laget.
 
-`AGENTS.md` i denne mappa oppsummerer versjonene og reglene. Bruker dere Cursor,
-Claude Code, Copilot eller lignende, les den fila selv også, og pek verktøyet på
-den.
+## Database
+
+Databasen er Cloudflare D1, som bruker SQLite. Drizzle brukes til å definere tabellene og kjøre spørringer. De viktigste tabellene er Better Auth-tabellene for brukere og sessions, og `drawings` for tegningene.
+
+En tegning lagrer blant annet:
+
+- Eierens bruker-ID.
+- Tittel.
+- Bredde og høyde.
+- Pikslene i tegningen.
+- Om tegningen er offentlig eller privat.
+- Tidspunkt for opprettelse og siste endring.
+
+Dataene overlever en omstart fordi de lagres i D1 og ikke i React-state eller en variabel på serveren.
+
+## Testing
+
+Testene ligger sammen med området de tester:
+
+- Enhetstester av blant annet ID-generatoren og Zod-reglene for tegninger.
+- Tester av drawing-servicen mot en testdatabase.
+- Komponenttester med Testing Library.
+- E2E-tester med Playwright.
+
+Kjør TypeScript-sjekken og Vitest før en commit:
+
+```bash
+pnpm lint
+pnpm test
+```
+
+## Valg vi har tatt
+
+### Samme service fra flere steder
+
+Både controllerne og server actions kaller drawing-servicen. Alternativet hadde vært å skrive reglene flere ganger. Da kunne for eksempel REST-ruten ha sjekket eierskap, mens server actionen glemte det.
+
+### Server- og klientkomponenter
+
+Sider som bare henter og viser data er serverkomponenter. Komponenter som åpner vinduer, reagerer på klikk eller bruker React-state er klientkomponenter. Det gjør at vi bare sender klient-JavaScript der vi faktisk trenger interaktivitet.
+
+### Privat som standard
+
+Nye tegninger er private. Brukeren må selv velge å publisere dem. Servicen sjekker både innlogget bruker og eieren av tegningen før synlighet, innhold eller sletting kan endres.
+
+## Avgrensninger
+
+Vi prioriterte hovedflyten med innlogging, tegning, lagring og publisering. Kommentarfeltet i visningen av en offentlig tegning er derfor bare et eksempel på grensesnittet og lagrer ikke kommentarer. Full støtte for likes og remiks ble heller ikke en del av den ferdige hovedflyten.
