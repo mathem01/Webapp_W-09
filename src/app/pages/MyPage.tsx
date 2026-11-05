@@ -12,7 +12,6 @@ export async function MyPage({ ctx, request }: RequestInfo) {
      deles. Mangler limit, bestemmer servicen standardverdien. */
   const query = new URL(request.url).searchParams;
   const page = Number(query.get("page") ?? 1);
-  const limit = query.get("limit") ? Number(query.get("limit")) : undefined;
 
   const initial = username?.charAt(0).toUpperCase() || "?";
 
@@ -96,7 +95,7 @@ export async function MyPage({ ctx, request }: RequestInfo) {
           <CreateNewDrawings />
 
           <Suspense fallback={<DrawingGridSkeleton />}>
-          <MyDrawings userId={userId} page={page} limit={limit} basePath="/myPage" />
+            <MyDrawings userId={userId} page={page} basePath="/myPage" />
           </Suspense>
         </section>
       </div>

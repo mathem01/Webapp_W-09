@@ -10,7 +10,7 @@ type Props = {
 };
 
 export async function MyDrawings({ userId, page, limit, basePath }: Props) {
-    const result = await service.listAllDrawingsByUser(userId, limit, page);
+    const result = await service.listAllDrawingsByUser(userId, page, limit);
 
     if (!result.ok) {
         return (
@@ -51,7 +51,6 @@ export async function MyDrawings({ userId, page, limit, basePath }: Props) {
             <Pagination
                 page={result.data.page}
                 totalPages={result.data.totalPages}
-                limit={result.data.limit}
                 basePath={basePath}
             />
         </>

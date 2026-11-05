@@ -6,7 +6,7 @@ type Props = {
 };
 
 export function Pagination({ page, totalPages, limit, basePath }: Props) {
-  if (totalPages <= 1) return null;
+  if (totalPages < 1) return null;
 
   /* Lenkene må ta med sidestørrelsen, ellers faller den tilbake til
      standardverdien når man bytter side. basePath kommer utenfra, så
@@ -15,7 +15,7 @@ export function Pagination({ page, totalPages, limit, basePath }: Props) {
     limit
       ? `${basePath}?page=${tilSide}&limit=${limit}`
       : `${basePath}?page=${tilSide}`;
-  
+
   const lenkeStil =
     "rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50";
   const avStil =
@@ -26,7 +26,7 @@ export function Pagination({ page, totalPages, limit, basePath }: Props) {
       aria-label="Sider"
       className="mx-auto mt-8 flex max-w-5xl items-center justify-between gap-4">
       {page > 1 ? (
-                <a href={lenke(page - 1)} className={lenkeStil}>
+        <a href={lenke(page - 1)} className={lenkeStil}>
           Forrige
         </a>
       ) : (
