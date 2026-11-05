@@ -1,11 +1,13 @@
-
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { RequestInfo } from "rwsdk/worker";
+import { ErrorResponse } from "@/test/worker-mock"
 import { createDrawingController } from "../drawing-controller";
 import type { DrawingService } from "../drawing-service";
 import { DEFAULT_PAGE_SIZE } from "../drawing-service";
 import { Errors, ResultHandler } from "@/lib/result";
 import { requireUser } from "@/middleware/guards";
+
+vi.mock("rwsdk/worker", () => import("@/test/worker-mock"));
 
 vi.mock("../drawing-service", async () => ({
   service: {},
@@ -297,3 +299,99 @@ describe("createDrawingController", () => {
     });
   });
 });
+
+describe("authentication", () => {
+  beforeEach(() => {
+    vi.mocked(requireUser).mockImplementation(() => {
+      throw new ErrorResponse(401, "Login required");
+    });
+  });
+
+  it("rejects unauthenticated drawing creation", async () => {
+    const { controller, service } = setup();
+
+    await expect(
+      controller.create(
+        requestInfo({
+          method: "POST",
+          body: input,
+        })
+      )
+    ).rejects.toMatchObject({
+      code: 401,
+      message: "Login required",
+    });
+
+    expect(service.createDrawing).not.toHaveBeenCalled();
+  });
+
+  it("rejects unauthenticated drawing updates", async () => {
+    const { controller, service } = setup();
+
+    await expect(
+      controller.update(
+        requestInfo({
+          method: "PUT",
+          params: { drawingId: "drawing-1" },
+          body: input,
+        })
+      )
+    ).rejects.toMatchObject({
+      code: 401,
+      message: "Login required",
+    });
+
+    expect(service.updateDrawing).not.toHaveBeenCalled();
+  });
+
+  it("rejects unauthenticated drawing deletion", async () => {
+    const { controller, service } = setup();
+
+    await expect(
+      controller.delete(
+        requestInfo({
+          method: "DELETE",
+          params: { drawingId: "drawing-1" },
+        })
+      )
+    ).rejects.toMatchObject({
+      code: 401,
+      message: "Login required",
+    });
+
+    expect(service.deleteDrawing).not.toHaveBeenCalled();
+  });
+
+  it("rejects unauthenticated visibility changes", async () => {
+    const { controller, service } = setup();
+
+    await expect(
+      controller.setVisibility(
+        requestInfo({
+          method: "PATCH",
+          params: { drawingId: "drawing-1" },
+          body: { isPublic: true },
+        })
+      )
+    ).rejects.toMatchObject({
+      code: 401,
+      message: "Login required",
+    });
+
+    expect(service.setDrawingVisibility).not.toHaveBeenCalled();
+  });
+
+  it("rejects unauthenticated access to personal drawings", async () => {
+    const { controller, service } = setup();
+
+    await expect(
+      controller.listAllByUser(requestInfo())
+    ).rejects.toMatchObject({
+      code: 401,
+      message: "Login required",
+    });
+
+    expect(service.listAllDrawingsByUser).not.toHaveBeenCalled();
+  });
+});
+

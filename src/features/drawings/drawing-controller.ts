@@ -46,7 +46,7 @@ export function createDrawingController(_service: DrawingService): DrawingContro
       return toResponse(result, 201);
     },
     async get({ params, ctx }: RequestInfo) {
-      const result = await _service.getDrawing(params.drawingId, ctx.session.userId!);
+      const result = await _service.getDrawing(params.drawingId, ctx.session?.userId);
 
       return toResponse(result)
     },
