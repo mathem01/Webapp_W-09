@@ -7,6 +7,7 @@ test("innlogget bruker kan opprette og finne en tegning", async ({ page }) => {
   const title = `E2E tegning ${Date.now()}`;
 
   await page.goto("/register");
+  await page.waitForTimeout(1000);
 
   await page.getByLabel("Navn", { exact: true }).fill("Test Bruker");
   await page.getByLabel("Brukernavn", { exact: true }).fill(username);
@@ -17,12 +18,17 @@ test("innlogget bruker kan opprette og finne en tegning", async ({ page }) => {
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/myPage");
+  await page.waitForTimeout(1000);
 
   await page.getByRole("button", { name: "Ny tegning" }).click();
 
-  await page.getByLabel("Tittel").fill(title);
-  await page.getByLabel("Bredde").fill("10");
-  await page.getByLabel("Høyde").fill("10");
+  await expect(
+    page.getByRole("dialog", { name: "Opprett ny tegning" }),
+  ).toBeVisible();
+
+  await page.getByLabel("Tittel", { exact: true }).fill(title);
+  await page.getByLabel("Bredde", { exact: true }).fill("10");
+  await page.getByLabel("Høyde", { exact: true }).fill("10");
 
   await page.getByRole("button", { name: "Opprett tegning" }).click();
 
