@@ -12,8 +12,8 @@ import { requireGuest, requireAuth, requireAdmin } from "@/middleware/guards";
 import { AppLayout } from "@/app/layouts/AppLayout"
 import { Home } from "@/app/pages/Home";
 import { Explore } from "@/app/pages/Explore";
-import { Register } from "@/app/pages/Register";
-import { Login } from "@/app/pages/Login";
+import { Register } from "@/features/login/pages/Register";
+import { Login } from "@/features/login/pages/Login";
 import { Profile } from "@/features/users/pages/Profile";
 import { userRoutes } from "@/features/users/user-routes";
 import { MyPage } from "@/app/pages/MyPage";

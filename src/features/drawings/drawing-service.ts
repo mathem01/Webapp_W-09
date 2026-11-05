@@ -1,7 +1,7 @@
 import { Errors, ResultHandler, type Result } from "@/lib/result";
 import { drawingInputSchema, drawingVisibilitySchema, type DrawingInput } from "@/features/drawings/drawing-schema";
 import { serializePixels, deserializePixels } from "@/features/drawings/utils/pixels";
-import { firstIssue } from "@/auth/schemas";
+import { firstIssue } from "@/features/login/login-schema";
 import {z} from "zod"; 
 import { DrawingView, type PublicDrawingView, type PublicDrawingPage, type DrawingPage } from "./drawing-types";
 import { repository, type DrawingRepository } from "./drawing-repository";

@@ -1,7 +1,7 @@
 "use client"; 
 
 import {useState, useTransition} from "react";
-import {loginSchema} from "@/auth/schemas";
+import {loginSchema} from "@/features/login/login-schema";
 
 export function LoginForm() {
 

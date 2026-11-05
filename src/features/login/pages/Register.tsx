@@ -1,22 +1,21 @@
+import { RegisterForm } from "@/features/login/components/RegisterForm";
 
-import {LoginForm} from "@/components/LoginForm";
-
-
-export function Login() {
+export function Register() {
   return (
     <section className="flex justify-center bg-neutral-200 px-4 py-16">
       <div className="w-full max-w-md rounded-xl bg-neutral-500 px-10 py-8 text-white">
-        <h1 className="text-center text-3xl uppercase">Logg inn</h1>
+        <h1 className="text-center text-3xl">Registrer</h1>
 
-        <LoginForm /> 
+        
+        <RegisterForm /> 
 
         <p className="mt-2 flex items-center gap-2 text-xs">
-          Trykk registrer for å lage ny bruker
+          Har du allerede en bruker?
           <a
-            href="/register"
+            href="/login"
             className="bg-neutral-300 px-3 py-1 text-sm text-neutral-900 transition hover:bg-neutral-100"
           >
-            Registrer
+            Logg inn
           </a>
         </p>
       </div>

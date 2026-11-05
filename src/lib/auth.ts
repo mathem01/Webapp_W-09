@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { admin } from "better-auth/plugins"
-import { usernameSchema } from "@/auth/schemas";
+import { usernameSchema } from "@/features/login/login-schema";
 
 import { db } from "@/db";
 import * as authSchema from "@/db/schema/auth-schema"

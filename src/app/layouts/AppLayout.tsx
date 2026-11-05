@@ -1,7 +1,7 @@
 // src/app/layouts/AppLayout.tsx
 
 import type { LayoutProps } from "rwsdk/router";
-import { LogoutButton } from "@/components/LogoutButton";
+import { LogoutButton } from "@/features/login/components/LogoutButton";
 
 export function AppLayout({ children, requestInfo }: LayoutProps) {
  const isAuthenticated = requestInfo?.ctx.session.isAuthenticated;
