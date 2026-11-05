@@ -1,6 +1,6 @@
 import { ExploreGrid, type ExploreDrawing } from "@/components/ExploreGrid";
 
-const drawings: ExploreDrawing[] = Array.from({ length: 12 }, (_, i) => ({
+const drawings: ExploreDrawing[] = Array.from({ length: 4 }, (_, i) => ({
   id: i + 1,
   title: "tegning",
   creator: "John",
