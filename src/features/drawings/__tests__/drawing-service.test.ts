@@ -311,6 +311,25 @@ describe("createDrawingService", () => {
         error: { code: Errors.NOT_FOUND },
       });
     });
+
+    it("prevents non-owners from deleting drawings", async () => {
+      const { service, repository } = setup();
+
+      repository.getDrawing.mockResolvedValue(
+        ResultHandler.success(storedDrawing)
+      );
+
+      const result = await service.deleteDrawing("drawing-1", BOB);
+
+      expect(result).toMatchObject({
+        ok: false,
+        error: {
+          code: Errors.NOT_FOUND,
+        },
+      });
+
+      expect(repository.deleteDrawing).not.toHaveBeenCalled();
+    });
   });
 
   describe("setDrawingVisibility", () => {
