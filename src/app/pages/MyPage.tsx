@@ -2,7 +2,7 @@ import { ErrorResponse, type RequestInfo } from "rwsdk/worker";
 import { Suspense } from "react";
 import { MyDrawings } from "@/features/drawings/components/MyDrawings";
 import { DrawingGridSkeleton } from "@/features/drawings/components/DrawingGridSkeleton";
-import { CreateNewDrawings } from "@/components/CreateNewDrawings";
+import { CreateNewDrawings } from "@/features/drawings/components/CreateNewDrawings";
 
 export async function MyPage({ ctx, request }: RequestInfo) {
   const { userId, username, email } = ctx.session;

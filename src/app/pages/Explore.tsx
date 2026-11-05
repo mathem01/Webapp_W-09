@@ -1,6 +1,6 @@
 import type { RequestInfo } from "rwsdk/worker";
 import { Suspense } from "react";
-import { ExploreDrawings } from "@/components/ExploreDrawings";
+import { ExploreDrawings } from "@/features/drawings/components/ExploreDrawings";
 import { DrawingGridSkeleton } from "@/features/drawings/components/DrawingGridSkeleton";
 
 export async function Explore({ ctx, request }: RequestInfo) {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { PublicDrawingView } from "@/features/drawings/drawing-types";
 import { PixelPreview } from "@/features/drawings/components/PixelPreview";
-import { DrawingDetailsModal } from "@/components/ExplorererDrawingComments";
+import { DrawingDetailsModal } from "./ExplorererDrawingComments";
 
 type Props = {
   drawings: PublicDrawingView[];
