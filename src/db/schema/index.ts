@@ -3,3 +3,4 @@
 // tabell to ganger (én gang direkte, én gang via denne re-eksporten).
 export * from "./auth-schema";
 export * from "./drawing-schema";
+export * from "./like-schema";
