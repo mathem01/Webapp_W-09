@@ -26,37 +26,6 @@ export function createUserRepository(_db: DB) {
 
             return result ?? null
         })
-        // try {
-        //     const [result] = await _db
-        //         .select({
-        //             id: user.id,
-        //             name: user.name,
-        //             username: user.username,
-        //             image: user.image,
-        //             createdAt: user.createdAt,
-        //         })
-        //         .from(user)
-        //         .where(eq(user.username, username))
-        //         .limit(1)
-
-        //     return {
-        //         ok: true,
-        //         data: result ?? null,
-        //     }
-
-        // } catch (error) {
-        //     console.error(error)
-
-        //     return {
-        //         ok: false,
-        //         error: {
-        //             code: "500",
-        //             message: "Noe gikk galt med uthentingen",
-        //             fieldErrors: {},
-        //         }
-        //     }
-        // }
-      
     },
   };
 }
