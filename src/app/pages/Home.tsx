@@ -17,7 +17,7 @@ export function Home() {
 
           <div className="mt-10 flex gap-3">
             <a
-              href="/drawing"
+              href="/canvas"
               className="rounded-xl bg-green-500 px-5 py-2 font-semibold text-white transition hover:bg-green-600"
             >
               Begynn å tegne

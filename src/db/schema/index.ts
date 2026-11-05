@@ -2,3 +2,4 @@
 // på mappa: drizzle-kit leser alt den finner, og en mappe ville gitt hver
 // tabell to ganger (én gang direkte, én gang via denne re-eksporten).
 export * from "./auth-schema";
+export * from "./drawing-schema";

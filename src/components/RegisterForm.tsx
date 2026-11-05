@@ -12,7 +12,7 @@ const [password, setPassword] = useState("");
 const [error, setError] = useState<string | null>(null);
 const [isPending, startTransition] = useTransition();
 
-function onSubmit(e: React.FormEvent<HTMLFormElement>){
+function registrerBruker(e: React.FormEvent<HTMLFormElement>){
 
 e.preventDefault();
 setError(null);     
@@ -35,6 +35,11 @@ startTransition(async () => {
     body: JSON.stringify(parsed.data),    
     });
 
+    if (res.status >= 500 && res.status <= 599) {
+        setError(`Serverfeil (${res.status}). Prøv igjen senere.`);
+        return;
+    }
+
     if (!res.ok) {
         setError("kunne ikke lage bruker, prøv et annen e-postadresse eller brukernavn");
         return;
@@ -45,7 +50,7 @@ startTransition(async () => {
 
 }
 
-return (<form onSubmit={onSubmit} className="mt-4 flex flex-col">
+return (<form onSubmit={registrerBruker} className="mt-4 flex flex-col">
           <label htmlFor="name" className="text-sm" >
             Navn
           </label>
@@ -128,5 +133,6 @@ return (<form onSubmit={onSubmit} className="mt-4 flex flex-col">
 
 
 }
+
 
 

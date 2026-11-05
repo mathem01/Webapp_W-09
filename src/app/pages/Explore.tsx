@@ -1,17 +1,21 @@
-import { ExploreGrid, type ExploreDrawing } from "@/components/ExploreGrid";
+import type { RequestInfo } from "rwsdk/worker";
+import { Suspense } from "react";
+import { ExploreDrawings } from "@/components/ExploreDrawings";
+import { DrawingGridSkeleton } from "@/features/drawings/components/DrawingGridSkeleton";
 
-const drawings: ExploreDrawing[] = Array.from({ length: 4 }, (_, i) => ({
-  id: i + 1,
-  title: "tegning",
-  creator: "John",
-  likes: 10,
-  comments: [{ id: 1, author: "john", text: "fint bilde" }],
-}));
+export async function Explore({ ctx, request }: RequestInfo) {
+  const url = new URL(request.url);
+  const page = Number(url.searchParams.get("page") ?? 1);
 
-export function Explore() {
   return (
     <section className="min-h-[calc(100vh-8rem)] bg-neutral-100 px-4 py-6">
-      <ExploreGrid drawings={drawings} />
+      <header className="mx-auto mb-6 max-w-5xl">
+        <h1 className="text-2xl font-bold text-neutral-900">Utforsk tegninger</h1>
+        <p className="mt-2 text-sm text-neutral-600">Oppdag tegninger som brukerne har delt offentlig.</p>
+      </header>
+      <Suspense fallback={<DrawingGridSkeleton variant="explore" />}>
+        <ExploreDrawings viewerUserId={ctx.session.userId} page={page} />
+      </Suspense>
     </section>
   );
 }

@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { admin } from "better-auth/plugins"
+import { usernameSchema } from "@/auth/schemas";
 
 import { db } from "@/db";
 import * as authSchema from "@/db/schema/auth-schema"
@@ -26,6 +27,9 @@ export const auth = betterAuth({
         type: "string",
         required: true,
         unique: true,
+        validator: {
+          input: usernameSchema
+        },
       },
     },
   },

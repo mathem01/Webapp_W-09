@@ -9,7 +9,9 @@ const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
 const [error, setError] = useState<string | null>(null);
 const [isPending, startTransition] = useTransition(); 
-function onSubmit(e: React.FormEvent<HTMLFormElement>){
+
+
+function loggInnBruker(e: React.FormEvent<HTMLFormElement>){
 e.preventDefault();
 setError(null) ;
 
@@ -44,7 +46,7 @@ return (
 
 
 
-<form onSubmit={onSubmit} className="mt-4 flex flex-col">
+<form onSubmit={loggInnBruker} className="mt-4 flex flex-col">
           <label htmlFor="email" className="mt-6 text-sm">
             Email
           </label>

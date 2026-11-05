@@ -1,0 +1,50 @@
+import { z } from "zod";
+
+
+export const MIN_SIZE = 10;
+export const MAX_SIZE = 500;
+export const MAX_TITLE_LENGTH = 100;
+
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+
+export const drawingTitleSchema = z
+  .string()
+  .trim()
+  .min(1, "Tittelen kan ikke være tom")
+  .max(MAX_TITLE_LENGTH, `Tittelen kan være maks ${MAX_TITLE_LENGTH} tegn`)
+
+export const drawingInputSchema = z
+  .object({
+    title: drawingTitleSchema,
+    width: z.number().int().min(MIN_SIZE).max(MAX_SIZE),
+    height: z.number().int().min(MIN_SIZE).max(MAX_SIZE),
+
+    // Én farge per piksel, radvis. null betyr gjennomsiktig.
+    pixels: z.array(z.string().regex(HEX_COLOR).nullable()),
+  })
+  .refine((d) => d.pixels.length === d.width * d.height, {
+    message: "Antall piksler stemmer ikke med bredde ganger høyde",
+    path: ["pixels"],
+  });
+
+export type DrawingInput = z.infer<typeof drawingInputSchema>;
+
+export const drawingVisibilitySchema = z.object({
+  isPublic: z.boolean(),
+});
+
+export function firstIssue(error: z.ZodError) {
+  return error.issues[0] ? error.issues[0].message : "Ugyldig input";
+}
+
+export const visibilityFormSchema = z.object({
+  drawingId: z.string().min(1),
+  isPublic: z.enum(["true", "false"]),
+});
+
+export const createDrawingFormSchema = z.object({
+  title: drawingTitleSchema,
+  width: z.coerce.number().int().min(MIN_SIZE).max(MAX_SIZE),
+  height: z.coerce.number().int().min(MIN_SIZE).max(MAX_SIZE),
+});
+
