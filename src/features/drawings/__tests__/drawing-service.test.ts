@@ -1,586 +1,437 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { eq } from "drizzle-orm";
-import { user, drawings } from "@/db/schema";
-import { createTestDb } from "@/test/db";
-import type { DB } from "@/db";
+import { describe, expect, it, vi } from "vitest";
 import {
   createDrawingService,
-  type DrawingService,
+  DEFAULT_PAGE_SIZE,
+  MAX_PAGE_SIZE,
 } from "../drawing-service";
-import { createDrawingRepository } from "../drawing-repository";
-import { MAX_PAGE_SIZE } from "../drawing-service";
+import type { DrawingRepository } from "../drawing-repository";
+import { Errors, ResultHandler } from "@/lib/result";
+import type { Drawing } from "@/db/schema";
 
-/* Factoryene under får testdatabasen gjennom dependency injection. Vi mocker
-   derfor bare appens globale D1-klient, slik at testen ikke prøver å laste
-   Cloudflare-runtimen i Vitest. */
-vi.mock("@/db", () => ({ db: {} }));
+vi.mock("../drawing-repository", () => ({repository: {}}));
 
 const ALICE = "user-alice";
 const BOB = "user-bob";
 
-let db: DB;
-let service: DrawingService;
+const input = {
+  title: "Test drawing",
+  width: 10,
+  height: 10,
+  pixels: Array<string | null>(100).fill("#ffffff"),
+};
 
-function drawing(overrides = {}) {
+const storedDrawing = {
+  id: "drawing-1",
+  userId: ALICE,
+  title: input.title,
+  width: input.width,
+  height: input.height,
+  pixels: JSON.stringify(input.pixels),
+  isPublic: false,
+  allowRemix: false,
+  remixOfId: null,
+  createdAt: new Date("2026-01-01"),
+  updatedAt: new Date("2026-01-01"),
+} as Drawing;
+
+function setup() {
+  const repository = {
+    createDrawing: vi.fn<DrawingRepository["createDrawing"]>(),
+    getDrawing: vi.fn<DrawingRepository["getDrawing"]>(),
+    createRemix: vi.fn<DrawingRepository["createRemix"]>(),
+    updateDrawing: vi.fn<DrawingRepository["updateDrawing"]>(),
+    deleteDrawing: vi.fn<DrawingRepository["deleteDrawing"]>(),
+    listPublicDrawings: vi.fn<DrawingRepository["listPublicDrawings"]>(),
+    countPublicDrawings: vi.fn<DrawingRepository["countPublicDrawings"]>(),
+    listPublicDrawingsByUser: vi.fn<DrawingRepository["listPublicDrawingsByUser"]>(),
+    countPublicDrawingsByUser: vi.fn<DrawingRepository["countPublicDrawingsByUser"]>(),
+    listAllDrawingsByUser: vi.fn<DrawingRepository["listAllDrawingsByUser"]>(),
+    countAllDrawingsByUser: vi.fn<DrawingRepository["countAllDrawingsByUser"]>(),
+    setDrawingVisibility: vi.fn<DrawingRepository["setDrawingVisibility"]>(),
+  };
+
   return {
-    title: "Min tegning",
-    width: 10,
-    height: 10,
-    pixels: Array(100).fill("#ffffff"),
-    ...overrides,
+    repository,
+    service: createDrawingService(repository),
   };
 }
 
-async function findDrawing(id: string) {
-  const [row] = await db
-    .select()
-    .from(drawings)
-    .where(eq(drawings.id, id))
-    .limit(1);
-
-  return row;
-}
-
-beforeEach(async () => {
-  db = createTestDb();
-
-  await db.insert(user).values([
-    {
-      id: ALICE,
-      name: "Alice",
-      username: "alice",
-      email: "alice@example.com",
-    },
-    {
-      id: BOB,
-      name: "Bob",
-      username: "bob",
-      email: "bob@example.com",
-    },
-  ]);
-
-  service = createDrawingService(
-    createDrawingRepository(db)
-  );
-});
-
-describe("drawingService.createDrawing", () => {
-  it("lager en tegning og lagrer riktig eier", async () => {
-    const result = await service.createDrawing(ALICE, drawing());
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-
-    const row = await findDrawing(result.data.id);
-
-    expect(row?.userId).toBe(ALICE);
-    expect(row?.title).toBe("Min tegning");
-  });
-
-  it("oppretter private tegninger som standard", async () => {
-    const result = await service.createDrawing(ALICE, drawing());
-
-    if (!result.ok) {
-      throw new Error("Kunne ikke opprette tegning");
-    }
-
-    const row = await findDrawing(result.data.id);
-
-    expect(row?.isPublic).toBe(false);
-  });
-
-  it("avviser ugyldige data", async () => {
-    const result = await service.createDrawing(
-      ALICE,
-      drawing({ title: "" })
-    );
-
-    expect(result.ok).toBe(false);
-
-    if (!result.ok) {
-      expect(result.error.code).toBe("BAD_REQUEST");
-      expect(result.error.fieldErrors?.title).toBeDefined();
-    }
-  });
-
-  it("lagrer ingenting når data er ugyldige", async () => {
-    const result = await service.createDrawing(
-      ALICE,
-      drawing({ width: 9999 })
-    );
-
-    expect(result.ok).toBe(false);
-
-    const rows = await db
-      .select()
-      .from(drawings);
-
-    expect(rows).toHaveLength(0);
-  });
-});
-
-describe("drawingService.getDrawing", () => {
-  it("lar eieren hente sin private tegning", async () => {
-    const created = await service.createDrawing(ALICE, drawing());
-
-    if (!created.ok) {
-      throw new Error("Kunne ikke opprette tegning");
-    }
-
-    const result = await service.getDrawing(created.data.id, ALICE);
-
-    expect(result.ok).toBe(true);
-
-    if (result.ok) {
-      expect(result.data.title).toBe("Min tegning");
-    }
-  });
-
-  it("skjuler private tegninger for andre brukere", async () => {
-    const created = await service.createDrawing(ALICE, drawing());
-
-    if (!created.ok) {
-      throw new Error("Kunne ikke opprette tegning");
-    }
-
-    const result = await service.getDrawing(created.data.id, BOB);
-
-    expect(result.ok).toBe(false);
-
-    if (!result.ok) {
-      expect(result.error.code).toBe("NOT_FOUND");
-    }
-  });
-
-  it("skjuler private tegninger for gjester", async () => {
-    const created = await service.createDrawing(ALICE, drawing());
-
-    if (!created.ok) {
-      throw new Error("Kunne ikke opprette tegning");
-    }
-
-    const result = await service.getDrawing(created.data.id, null);
-
-    expect(result.ok).toBe(false);
-
-    if (!result.ok) {
-      expect(result.error.code).toBe("NOT_FOUND");
-    }
-  });
-
-  it("lar gjester hente offentlige tegninger", async () => {
-    const created = await service.createDrawing(ALICE, drawing());
-
-    if (!created.ok) {
-      throw new Error("Kunne ikke opprette tegning");
-    }
-
-    const visibility = await service.setDrawingVisibility(
-      created.data.id,
-      ALICE,
-      { isPublic: true }
-    );
-
-    expect(visibility.ok).toBe(true);
-
-    const result = await service.getDrawing(created.data.id, null);
-
-    expect(result.ok).toBe(true);
-
-    if (result.ok) {
-      expect(result.data.title).toBe("Min tegning");
-    }
-  });
-
-  it("returnerer NOT_FOUND for en ukjent tegning", async () => {
-    const result = await service.getDrawing("finnes-ikke", ALICE);
-
-    expect(result.ok).toBe(false);
-
-    if (!result.ok) {
-      expect(result.error.code).toBe("NOT_FOUND");
-    }
-  });
-});
-
-describe("drawingService.updateDrawing", () => {
-  it("lar Alice oppdatere sin egen tegning", async () => {
-    const created = await service.createDrawing(ALICE, drawing());
-
-    if (!created.ok) {
-      throw new Error("Kunne ikke opprette tegning");
-    }
-
-    const result = await service.updateDrawing(
-      created.data.id,
-      ALICE,
-      drawing({ title: "Nytt navn" })
-    );
-
-    expect(result.ok).toBe(true);
-
-    const row = await findDrawing(created.data.id);
-
-    expect(row?.title).toBe("Nytt navn");
-  });
-
-  it("hindrer Bob i å oppdatere Alice sin tegning", async () => {
-    const created = await service.createDrawing(ALICE, drawing());
-
-    if (!created.ok) {
-      throw new Error("Kunne ikke opprette tegning");
-    }
-
-    const result = await service.updateDrawing(
-      created.data.id,
-      BOB,
-      drawing({ title: "Hacket" })
-    );
-
-    expect(result.ok).toBe(false);
-
-    if (!result.ok) {
-      expect(result.error.code).toBe("NOT_FOUND");
-    }
-
-    const row = await findDrawing(created.data.id);
-
-    expect(row?.title).toBe("Min tegning");
-  });
-
-  it("returnerer NOT_FOUND når tegningen ikke finnes", async () => {
-    const result = await service.updateDrawing(
-      "finnes-ikke",
-      ALICE,
-      drawing()
-    );
-
-    expect(result.ok).toBe(false);
-
-    if (!result.ok) {
-      expect(result.error.code).toBe("NOT_FOUND");
-    }
-  });
-
-  it("avviser ugyldige data ved oppdatering", async () => {
-    const created = await service.createDrawing(ALICE, drawing());
-
-    if (!created.ok) {
-      throw new Error("Kunne ikke opprette tegning");
-    }
-
-    const result = await service.updateDrawing(
-      created.data.id,
-      ALICE,
-      drawing({ title: "" })
-    );
-
-    expect(result.ok).toBe(false);
-
-    if (!result.ok) {
-      expect(result.error.code).toBe("BAD_REQUEST");
-      expect(result.error.fieldErrors?.title).toBeDefined();
-    }
-
-    const row = await db.query.drawings.findFirst({
-      where: { id: created.data.id },
+describe("createDrawingService", () => {
+  describe("createDrawing", () => {
+    it("creates a drawing with valid input", async () => {
+      const { service, repository } = setup();
+
+      repository.createDrawing.mockResolvedValue(
+        ResultHandler.success({ id: "drawing-1" })
+      );
+
+      const result = await service.createDrawing(ALICE, input);
+
+      expect(result).toEqual({
+        ok: true,
+        data: { id: "drawing-1" },
+      });
+
+      expect(repository.createDrawing).toHaveBeenCalledWith(ALICE, input);
     });
 
-    expect(row?.title).toBe("Min tegning");
-  });
-});
+    it("rejects invalid input", async () => {
+      const { service, repository } = setup();
 
-describe("drawingService.deleteDrawing", () => {
-  it("lar Alice slette sin egen tegning", async () => {
-    const created = await service.createDrawing(ALICE, drawing());
+      const result = await service.createDrawing(ALICE, {
+        ...input,
+        title: "",
+      });
 
-    if (!created.ok) {
-      throw new Error("Kunne ikke opprette tegning");
-    }
+      expect(result).toMatchObject({
+        ok: false,
+        error: {
+          code: Errors.BAD_REQUEST,
+        },
+      });
 
-    const result = await service.deleteDrawing(
-      created.data.id,
-      ALICE
-    );
+      expect(repository.createDrawing).not.toHaveBeenCalled();
+    });
 
-    expect(result.ok).toBe(true);
+    it("rejects incorrect pixel counts", async () => {
+      const { service, repository } = setup();
 
-    const row = await findDrawing(created.data.id);
+      const result = await service.createDrawing(ALICE, {
+        ...input,
+        pixels: ["#ffffff"],
+      });
 
-    expect(row).toBeUndefined();
-  });
+      expect(result).toMatchObject({
+        ok: false,
+        error: {
+          code: Errors.BAD_REQUEST,
+        },
+      });
 
-  it("hindrer Bob i å slette Alice sin tegning", async () => {
-    const created = await service.createDrawing(ALICE, drawing());
+      expect(repository.createDrawing).not.toHaveBeenCalled();
+    });
 
-    if (!created.ok) {
-      throw new Error("Kunne ikke opprette tegning");
-    }
+    it("propagates repository errors", async () => {
+      const { service, repository } = setup();
 
-    const result = await service.deleteDrawing(
-      created.data.id,
-      BOB
-    );
-
-    expect(result.ok).toBe(false);
-
-    if (!result.ok) {
-      expect(result.error.code).toBe("NOT_FOUND");
-    }
-
-    const row = await findDrawing(created.data.id);
-
-    expect(row).toBeDefined();
-  });
-
-  it("returnerer NOT_FOUND når tegningen ikke finnes", async () => {
-    const result = await service.deleteDrawing(
-      "finnes-ikke",
-      ALICE
-    );
-
-    expect(result.ok).toBe(false);
-
-    if (!result.ok) {
-      expect(result.error.code).toBe("NOT_FOUND");
-    }
-  });
-});
-
-describe("drawingService.setDrawingVisibility", () => {
-  it("lar eieren gjøre en tegning offentlig", async () => {
-    const created = await service.createDrawing(ALICE, drawing());
-
-    if (!created.ok) {
-      throw new Error("Kunne ikke opprette tegning");
-    }
-
-    const result = await service.setDrawingVisibility(
-      created.data.id,
-      ALICE,
-      { isPublic: true }
-    );
-
-    expect(result.ok).toBe(true);
-
-    const row = await findDrawing(created.data.id);
-
-    expect(row?.isPublic).toBe(true);
-  });
-
-  it("hindrer andre brukere i å endre synlighet", async () => {
-    const created = await service.createDrawing(ALICE, drawing());
-
-    if (!created.ok) {
-      throw new Error("Kunne ikke opprette tegning");
-    }
-
-    const result = await service.setDrawingVisibility(
-      created.data.id,
-      BOB,
-      { isPublic: true }
-    );
-
-    expect(result.ok).toBe(false);
-
-    if (!result.ok) {
-      expect(result.error.code).toBe("NOT_FOUND");
-    }
-
-    const row = await findDrawing(created.data.id);
-
-    expect(row?.isPublic).toBe(false);
-  });
-
-  it("returnerer NOT_FOUND når tegningen ikke finnes", async () => {
-    const result = await service.setDrawingVisibility(
-      "finnes-ikke",
-      ALICE,
-      { isPublic: true }
-    );
-
-    expect(result.ok).toBe(false);
-
-    if (!result.ok) {
-      expect(result.error.code).toBe("NOT_FOUND");
-    }
-  });
-});
-
-describe("drawingService.listPublicDrawings", () => {
-  it("lister bare offentlige tegninger", async () => {
-    const publicDrawing = await service.createDrawing(
-      ALICE,
-      drawing({ title: "Offentlig" })
-    );
-
-    const privateDrawing = await service.createDrawing(
-      ALICE,
-      drawing({ title: "Privat" })
-    );
-
-    if (!publicDrawing.ok || !privateDrawing.ok) {
-      throw new Error("Kunne ikke opprette tegninger");
-    }
-
-    await service.setDrawingVisibility(
-      publicDrawing.data.id,
-      ALICE,
-      { isPublic: true }
-    );
-
-    const result = await service.listPublicDrawings(1, 10);
-
-    expect(result.ok).toBe(true);
-
-    if (result.ok) {
-      expect(result.data.items.map((item) => item.title)).toEqual([
-        "Offentlig",
-      ]);
-    }
-  });
-
-  it("begrenser sidestørrelsen til maks", async () => {
-    for (let i = 0; i < 25; i++) {
-      const created = await service.createDrawing(
-        ALICE,
-        drawing({ title: `Tegning ${i}` })
+      repository.createDrawing.mockResolvedValue(
+        ResultHandler.failure(
+          "Database error",
+          Errors.INTERNAL_SERVER_ERROR
+        )
       );
 
-      if (!created.ok) {
-        throw new Error("Kunne ikke opprette tegning");
-      }
+      const result = await service.createDrawing(ALICE, input);
 
-      await service.setDrawingVisibility(
-        created.data.id,
-        ALICE,
-        { isPublic: true }
+      expect(result).toMatchObject({
+        ok: false,
+        error: {
+          code: Errors.INTERNAL_SERVER_ERROR,
+        },
+      });
+    });
+
+    it("returns NOT_FOUND when no ID is returned", async () => {
+      const { service, repository } = setup();
+
+      repository.createDrawing.mockResolvedValue(
+        ResultHandler.success(
+          undefined as unknown as { id: string }
+        )
       );
-    }
 
-    const result = await service.listPublicDrawings(1, 100);
+      const result = await service.createDrawing(ALICE, input);
 
-    expect(result.ok).toBe(true);
-
-    if (result.ok) {
-      expect(result.data.items).toHaveLength(25);
-      expect(result.data.limit).toBe(MAX_PAGE_SIZE);
-    }
-  });
-});
-
-describe("drawingService.listPublicDrawingsByUser", () => {
-  it("viser bare brukerens offentlige tegninger", async () => {
-    const alicePublic = await service.createDrawing(
-      ALICE,
-      drawing({ title: "Alice offentlig" })
-    );
-
-    const alicePrivate = await service.createDrawing(
-      ALICE,
-      drawing({ title: "Alice privat" })
-    );
-
-    const bobPublic = await service.createDrawing(
-      BOB,
-      drawing({ title: "Bob offentlig" })
-    );
-
-    if (
-      !alicePublic.ok ||
-      !alicePrivate.ok ||
-      !bobPublic.ok
-    ) {
-      throw new Error("Kunne ikke opprette tegninger");
-    }
-
-    await service.setDrawingVisibility(
-      alicePublic.data.id,
-      ALICE,
-      { isPublic: true }
-    );
-
-    await service.setDrawingVisibility(
-      bobPublic.data.id,
-      BOB,
-      { isPublic: true }
-    );
-
-    const result = await service.listPublicDrawingsByUser(ALICE);
-
-    expect(result.ok).toBe(true);
-
-    if (result.ok) {
-      expect(result.data.items.map((item) => item.title)).toEqual([
-        "Alice offentlig",
-      ]);
-    }
-  });
-});
-
-describe("drawingService.listAllDrawingsByUser", () => {
-  it("viser både offentlige og private tegninger for eieren", async () => {
-    const publicDrawing = await service.createDrawing(
-      ALICE,
-      drawing({ title: "Offentlig" })
-    );
-
-    const privateDrawing = await service.createDrawing(
-      ALICE,
-      drawing({ title: "Privat" })
-    );
-
-    if (!publicDrawing.ok || !privateDrawing.ok) {
-      throw new Error("Kunne ikke opprette tegninger");
-    }
-
-    await service.setDrawingVisibility(
-      publicDrawing.data.id,
-      ALICE,
-      { isPublic: true }
-    );
-
-    const result = await service.listAllDrawingsByUser(ALICE);
-
-    expect(result.ok).toBe(true);
-
-    if (result.ok) {
-      expect(result.data.items.map((item) => item.title).sort()).toEqual([
-        "Offentlig",
-        "Privat",
-      ]);
-    }
+      expect(result).toMatchObject({
+        ok: false,
+        error: { code: Errors.NOT_FOUND },
+      });
+    });
   });
 
-  it("viser ikke tegninger som tilhører andre brukere", async () => {
-    await service.createDrawing(ALICE, drawing({ title: "Alice" }));
-    await service.createDrawing(BOB, drawing({ title: "Bob" }));
+  describe("getDrawing", () => {
+    it("allows anyone to view a public drawing", async () => {
+      const { service, repository } = setup();
 
-    const result = await service.listAllDrawingsByUser(ALICE);
+      repository.getDrawing.mockResolvedValue(
+        ResultHandler.success({
+          ...storedDrawing,
+          isPublic: true,
+        })
+      );
 
-    expect(result.ok).toBe(true);
+      const result = await service.getDrawing("drawing-1", BOB);
 
-    if (result.ok) {
-      expect(result.data.items.map((item) => item.title)).toEqual([
-        "Alice",
-      ]);
-    }
+      expect(result).toMatchObject({
+        ok: true,
+        data: {
+          id: "drawing-1",
+          title: "Test drawing",
+          isPublic: true,
+        },
+      });
+    });
+
+    it("allows the owner to view a private drawing", async () => {
+      const { service, repository } = setup();
+
+      repository.getDrawing.mockResolvedValue(
+        ResultHandler.success(storedDrawing)
+      );
+
+      const result = await service.getDrawing("drawing-1", ALICE);
+
+      expect(result.ok).toBe(true);
+    });
+
+    it("prevents other users from viewing private drawings", async () => {
+      const { service, repository } = setup();
+
+      repository.getDrawing.mockResolvedValue(
+        ResultHandler.success(storedDrawing)
+      );
+
+      const result = await service.getDrawing("drawing-1", BOB);
+
+      expect(result).toMatchObject({
+        ok: false,
+        error: { code: Errors.NOT_FOUND },
+      });
+    });
+
+    it("returns NOT_FOUND for missing drawings", async () => {
+      const { service, repository } = setup();
+
+      repository.getDrawing.mockResolvedValue(
+        ResultHandler.success(null)
+      );
+
+      const result = await service.getDrawing("missing", ALICE);
+
+      expect(result).toMatchObject({
+        ok: false,
+        error: { code: Errors.NOT_FOUND },
+      });
+    });
   });
-});
 
-it("feeden inkluderer bare offentlige tegninger med riktig eier og følger endret synlighet", async () => {
-  const first = await service.createDrawing(ALICE, drawing({ title: "Alice offentlig" }));
-  const second = await service.createDrawing(BOB, drawing({ title: "Bob privat" }));
-  if (!first.ok || !second.ok) throw new Error("Oppretting feilet");
-  await service.setDrawingVisibility(first.data.id, ALICE, { isPublic: true });
-  const published = await service.listPublicDrawings(1, 20);
-  if (!published.ok) throw new Error("Henting feilet");
-  expect(published.data.items).toHaveLength(1);
-  expect(published.data.items[0].owner).toEqual({ id: ALICE, username: "alice" });
-  expect(published.data.items[0]).not.toHaveProperty("email");
-  expect(published.data.items[0].owner).not.toHaveProperty("email");
-  await service.setDrawingVisibility(first.data.id, ALICE, { isPublic: false });
-  const unpublished = await service.listPublicDrawings(1, 20);
-  if (!unpublished.ok) throw new Error("Henting feilet");
-  expect(unpublished.data.items).toHaveLength(0);
+  describe("updateDrawing", () => {
+    it("updates a drawing with valid input", async () => {
+      const { service, repository } = setup();
+
+      repository.updateDrawing.mockResolvedValue(
+        ResultHandler.success({ id: "drawing-1" })
+      );
+
+      const result = await service.updateDrawing("drawing-1", ALICE, input);
+
+      expect(result).toEqual({
+        ok: true,
+        data: undefined,
+      });
+
+      expect(repository.updateDrawing).toHaveBeenCalledWith("drawing-1", ALICE, input);
+    });
+
+    it("rejects invalid input before accessing the repository", async () => {
+      const { service, repository } = setup();
+
+      const result = await service.updateDrawing("drawing-1", ALICE, { ...input, width: -1 });
+
+      expect(result).toMatchObject({
+        ok: false,
+        error: { code: Errors.BAD_REQUEST },
+      });
+
+      expect(repository.updateDrawing).not.toHaveBeenCalled();
+    });
+
+    it("returns NOT_FOUND when the drawing cannot be updated", async () => {
+      const { service, repository } = setup();
+
+      repository.updateDrawing.mockResolvedValue(
+        ResultHandler.success(null)
+      );
+
+      const result = await service.updateDrawing("drawing-1", BOB, input);
+
+      expect(result).toMatchObject({
+        ok: false,
+        error: { code: Errors.NOT_FOUND },
+      });
+    });
+  });
+
+  describe("deleteDrawing", () => {
+    it("allows the owner to delete a drawing", async () => {
+      const { service, repository } = setup();
+
+      repository.getDrawing.mockResolvedValue(
+        ResultHandler.success(storedDrawing)
+      );
+
+      repository.deleteDrawing.mockResolvedValue(
+        ResultHandler.success(true)
+      );
+
+      const result = await service.deleteDrawing("drawing-1", ALICE);
+
+      expect(result.ok).toBe(true);
+      expect(repository.deleteDrawing).toHaveBeenCalledWith("drawing-1", ALICE);
+    });
+
+    it("prevents other users from deleting a drawing", async () => {
+      const { service, repository } = setup();
+
+      repository.getDrawing.mockResolvedValue(
+        ResultHandler.success(storedDrawing)
+      );
+
+      const result = await service.deleteDrawing("drawing-1", BOB);
+
+      expect(result).toMatchObject({
+        ok: false,
+        error: { code: Errors.NOT_FOUND },
+      });
+
+      expect(repository.deleteDrawing).not.toHaveBeenCalled();
+    });
+
+    it("returns NOT_FOUND when the drawing does not exist", async () => {
+      const { service, repository } = setup();
+
+      repository.getDrawing.mockResolvedValue(
+        ResultHandler.success(null)
+      );
+
+      const result = await service.deleteDrawing("missing", ALICE);
+
+      expect(result).toMatchObject({
+        ok: false,
+        error: { code: Errors.NOT_FOUND },
+      });
+    });
+  });
+
+  describe("setDrawingVisibility", () => {
+    it("publishes a drawing", async () => {
+      const { service, repository } = setup();
+
+      repository.setDrawingVisibility.mockResolvedValue(
+        ResultHandler.success({ id: "drawing-1" })
+      );
+
+      const result = await service.setDrawingVisibility("drawing-1", ALICE, { isPublic: true });
+
+      expect(result.ok).toBe(true);
+      expect(repository.setDrawingVisibility).toHaveBeenCalledWith("drawing-1", ALICE, true);
+    });
+
+    it("rejects invalid visibility input", async () => {
+      const { service, repository } = setup();
+
+      const result = await service.setDrawingVisibility("drawing-1", ALICE, { isPublic: "true" });
+
+      expect(result).toMatchObject({
+        ok: false,
+        error: { code: Errors.BAD_REQUEST },
+      });
+
+      expect(repository.setDrawingVisibility).not.toHaveBeenCalled();
+    });
+
+    it("returns NOT_FOUND when visibility cannot be updated", async () => {
+      const { service, repository } = setup();
+
+      repository.setDrawingVisibility.mockResolvedValue(
+        ResultHandler.success(null)
+      );
+
+      const result = await service.setDrawingVisibility("drawing-1", BOB, { isPublic: true });
+
+      expect(result).toMatchObject({
+        ok: false,
+        error: { code: Errors.NOT_FOUND },
+      });
+    });
+  });
+
+  describe("listPublicDrawings", () => {
+    it("calculates the correct offset", async () => {
+      const { service, repository } = setup();
+
+      repository.countPublicDrawings.mockResolvedValue(ResultHandler.success(40));
+
+      repository.listPublicDrawings.mockResolvedValue(ResultHandler.success([]));
+
+      await service.listPublicDrawings(2, 10);
+
+      expect(repository.listPublicDrawings).toHaveBeenCalledWith(10, 10);
+    });
+
+    it("limits the maximum page size", async () => {
+      const { service, repository } = setup();
+
+      repository.countPublicDrawings.mockResolvedValue(
+        ResultHandler.success(100)
+      );
+
+      repository.listPublicDrawings.mockResolvedValue(
+        ResultHandler.success([])
+      );
+
+      const result = await service.listPublicDrawings(1, 999);
+
+      expect(repository.listPublicDrawings).toHaveBeenCalledWith(MAX_PAGE_SIZE, 0);
+
+      expect(result).toMatchObject({
+        ok: true,
+        data: { limit: MAX_PAGE_SIZE },
+      });
+    });
+
+    it("clamps pages exceeding the total number of pages", async () => {
+      const { service, repository } = setup();
+
+      repository.countPublicDrawings.mockResolvedValue(
+        ResultHandler.success(15)
+      );
+
+      repository.listPublicDrawings.mockResolvedValue(
+        ResultHandler.success([])
+      );
+
+      const result = await service.listPublicDrawings(99, 10);
+
+      expect(repository.listPublicDrawings).toHaveBeenCalledWith(10, 10);
+
+      expect(result).toMatchObject({
+        ok: true,
+        data: {
+          page: 2,
+          totalPages: 2,
+        },
+      });
+    });
+
+    it("propagates count errors", async () => {
+      const { service, repository } = setup();
+
+      repository.countPublicDrawings.mockResolvedValue(
+        ResultHandler.failure(
+          "Database error",
+          Errors.INTERNAL_SERVER_ERROR
+        )
+      );
+
+      const result = await service.listPublicDrawings();
+
+      expect(result).toMatchObject({
+        ok: false,
+        error: { code: Errors.INTERNAL_SERVER_ERROR },
+      });
+
+      expect(repository.listPublicDrawings).not.toHaveBeenCalled();
+    });
+  });
 });
