@@ -6,8 +6,9 @@ import { ErrorResponse, requestInfo } from "rwsdk/worker";
 import { requireUser } from "@/middleware/guards";
 import { service } from "@/features/drawings/drawing-service";
 import { Errors, ServerResult, ResultError, ResultHandler, ServerResultHandler } from "@/lib/result";
-import { type DrawingInput, visibilityFormSchema } from "./drawing-schema";
+import { createDrawingFormSchema, type DrawingInput, visibilityFormSchema } from "./drawing-schema";
 import { demoDelay } from "@/lib/demo-chaos";
+import { createEmptyPixels } from "./utils/pixels";
 
 export type SaveDrawingState = {
   id: string | null;
@@ -105,6 +106,48 @@ function currentUser() {
 export async function createDrawing(input: unknown) {
   const user = currentUser();
   return service.createDrawing(user.id, input);
+}
+
+export type CreateDrawingState = {
+  drawingId: string | null;
+  error: string | null;
+};
+
+export async function createDrawingFromForm(
+  previousState: CreateDrawingState,
+  formData: FormData
+): Promise<CreateDrawingState> {
+  const parsed = createDrawingFormSchema.safeParse({
+    title: formData.get("title"),
+    width: formData.get("width"),
+    height: formData.get("height"),
+  });
+
+  if (!parsed.success) {
+    return {
+      drawingId: previousState.drawingId,
+      error: "Skriv inn en tittel og gyldig bredde og høyde.",
+    };
+  }
+
+  try {
+    const user = currentUser();
+    const { title, width, height } = parsed.data;
+    const result = await service.createDrawing(user.id, {
+      title,
+      width,
+      height,
+      pixels: createEmptyPixels(width, height),
+    });
+
+    if (!result.ok) {
+      return { drawingId: null, error: result.error.message };
+    }
+
+    return { drawingId: result.data.id, error: null };
+  } catch {
+    return { drawingId: null, error: "Kunne ikke opprette tegningen." };
+  }
 }
 
 export async function updateDrawing(id: string, input: unknown) {

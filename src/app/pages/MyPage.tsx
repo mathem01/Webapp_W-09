@@ -2,6 +2,7 @@ import { ErrorResponse, type RequestInfo } from "rwsdk/worker";
 import { Suspense } from "react";
 import { MyDrawings } from "@/features/drawings/components/MyDrawings";
 import { DrawingGridSkeleton } from "@/features/drawings/components/DrawingGridSkeleton";
+import { CreateNewDrawings } from "@/components/CreateNewDrawings";
 
 export async function MyPage({ ctx }: RequestInfo) {
   const { userId, username, email } = ctx.session;
@@ -85,6 +86,8 @@ export async function MyPage({ ctx }: RequestInfo) {
               Her vises både private og offentlige tegninger.
             </p>
           </header>
+
+          <CreateNewDrawings />
 
           <Suspense fallback={<DrawingGridSkeleton />}>
             <MyDrawings userId={userId} />

@@ -42,3 +42,9 @@ export const visibilityFormSchema = z.object({
   isPublic: z.enum(["true", "false"]),
 });
 
+export const createDrawingFormSchema = z.object({
+  title: drawingTitleSchema,
+  width: z.coerce.number().int().min(MIN_SIZE).max(MAX_SIZE),
+  height: z.coerce.number().int().min(MIN_SIZE).max(MAX_SIZE),
+});
+
