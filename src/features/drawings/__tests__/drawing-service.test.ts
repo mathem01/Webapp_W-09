@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { user, drawings } from "@/db/schema";
 import { createTestDb } from "@/test/db";
@@ -9,6 +9,11 @@ import {
 } from "../drawing-service";
 import { createDrawingRepository } from "../drawing-repository";
 import { MAX_PAGE_SIZE } from "../drawing-service";
+
+/* Factoryene under får testdatabasen gjennom dependency injection. Vi mocker
+   derfor bare appens globale D1-klient, slik at testen ikke prøver å laste
+   Cloudflare-runtimen i Vitest. */
+vi.mock("@/db", () => ({ db: {} }));
 
 const ALICE = "user-alice";
 const BOB = "user-bob";

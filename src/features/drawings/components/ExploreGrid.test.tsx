@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { ExploreGrid } from "./ExploreGrid";
 import type { PublicDrawingView } from "@/features/drawings/drawing-types";
 
@@ -11,13 +12,20 @@ const drawing: PublicDrawingView = {
   owner: { id: "owner-1", username: "lebron" },
 };
 
-it("viser tegningen og lenker avatar og brukernavn til eierens profil for gjester", () => {
+it("viser tegningen, åpner detaljene og lenker til eierens profil", async () => {
+  const user = userEvent.setup();
   render(<ExploreGrid drawings={[drawing]} viewerUserId={null} />);
-  expect(screen.getByRole("img", { name: "Mitt hjerte" })).toBeInTheDocument();
+
+  const openButton = screen.getByRole("button", { name: "Åpne Mitt hjerte" });
+  expect(openButton).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Se profilen til lebron" })).toHaveAttribute("href", "/profile/lebron");
   expect(screen.getByRole("link", { name: "@lebron" })).toHaveAttribute("href", "/profile/lebron");
-  expect(screen.queryByRole("button")).not.toBeInTheDocument();
   expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+
+  await user.click(openButton);
+
+  expect(screen.getByRole("dialog", { name: "Mitt hjerte" })).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "Skriv en kommentar" })).toBeDisabled();
 });
 
 it("sender en annen innlogget bruker til eierens offentlige profil", () => {
