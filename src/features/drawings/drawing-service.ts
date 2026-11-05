@@ -3,7 +3,7 @@ import { drawingInputSchema, drawingVisibilitySchema, type DrawingInput } from "
 import { serializePixels, deserializePixels } from "@/features/drawings/utils/pixels";
 import { firstIssue } from "@/auth/schemas";
 import {z} from "zod"; 
-import { DrawingView, type PublicDrawingView, type PublicDrawingPage } from "./drawing-types";
+import { DrawingView, type PublicDrawingView, type PublicDrawingPage, type DrawingPage } from "./drawing-types";
 import { repository, type DrawingRepository } from "./drawing-repository";
 import { toDrawingView } from "./drawing-mapper";
 
@@ -16,6 +16,18 @@ function clamp(value: number, min: number, max: number) {
   if (!Number.isFinite(value)) return min
   return Math.min(max, Math.max(min, Math.floor(value)))
 }
+
+/* Regner ut hvilken side vi faktisk skal hente.
+   Sidetall og sidestørrelse kommer utenfra og kan være hva som helst, så
+   begge klemmes inn i lovlige verdier. Ber noen om side 99 av 3, får de
+   side 3 — en tom side er en dårligere opplevelse enn siste side. */
+function pageFor(total: number, page: number, limit: number) {
+  const safeAmount = clamp(limit, 1, MAX_PAGE_SIZE)
+  const totalPages = Math.max(1, Math.ceil(total / safeAmount))
+  const currentPage = Math.min(Math.max(1, Math.floor(page) || 1), totalPages)
+
+  return { currentPage, safeAmount, totalPages, offset: (currentPage - 1) * safeAmount }
+}
 export interface DrawingService {
   createDrawing(userId: string, input: unknown): Promise<Result<{ id: string }>>
   getDrawing(id: string, userId: string | null): Promise<Result<DrawingView>>
@@ -24,8 +36,8 @@ export interface DrawingService {
   deleteDrawing(id: string, userId: string): Promise<Result<void>>
 
   listPublicDrawings(page?: number, limit?: number): Promise<Result<PublicDrawingPage>>
-  listPublicDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
-  listAllDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
+  listPublicDrawingsByUser(userId: string, page?: number, limit?: number): Promise<Result<DrawingPage>>
+  listAllDrawingsByUser(userId: string, page?: number, limit?: number): Promise<Result<DrawingPage>>
 
   setDrawingVisibility(id: string, userId: string, input: unknown): Promise<Result<void>>
 }
@@ -155,44 +167,58 @@ export function createDrawingService(_repository: DrawingRepository): DrawingSer
 
       return ResultHandler.success(undefined)
     },
-    async listPublicDrawings(page = 1, limit = DEFAULT_PAGE_SIZE): Promise<Result<PublicDrawingPage>> {
-      const safeAmount = clamp(limit, 1, MAX_PAGE_SIZE)
-      const safePageNum = Math.max(1, Math.floor(page) || 1)
-
+        async listPublicDrawings(page = 1, limit = DEFAULT_PAGE_SIZE): Promise<Result<PublicDrawingPage>> {
       const total = await _repository.countPublicDrawings()
       if (!total.ok) return total
 
-      const totalPages = Math.max(1, Math.ceil(total.data / safeAmount))
-      const side = Math.min(safePageNum, totalPages)
+      const { currentPage, safeAmount, totalPages, offset } = pageFor(total.data, page, limit)
 
-      const result = await _repository.listPublicDrawings(
-        safeAmount,
-        (side - 1) * safeAmount
-      )
-
+      const result = await _repository.listPublicDrawings(safeAmount, offset)
       if (!result.ok) return result
 
       return ResultHandler.success({
         items: result.data,
-        page: side,
+        page: currentPage,
         limit: safeAmount,
         total: total.data,
         totalPages,
       })
     },
-    async listPublicDrawingsByUser(userId: string): Promise<Result<DrawingView[]>> {
-      const result = await _repository.listPublicDrawingsByUser(userId)
+    /* Tegningene en bruker har publisert. Vises på profilsiden. */
+    async listPublicDrawingsByUser(userId: string, page = 1, limit = DEFAULT_PAGE_SIZE): Promise<Result<DrawingPage>> {
+      const total = await _repository.countPublicDrawingsByUser(userId)
+      if (!total.ok) return total
 
+      const { currentPage, safeAmount, totalPages, offset } = pageFor(total.data, page, limit)
+
+      const result = await _repository.listPublicDrawingsByUser(userId, safeAmount, offset)
       if (!result.ok) return result
-      
-      return ResultHandler.success(result.data)
+
+      return ResultHandler.success({
+        items: result.data,
+        page: currentPage,
+        limit: safeAmount,
+        total: total.data,
+        totalPages,
+      })
     },
-    async listAllDrawingsByUser(userId: string): Promise<Result<DrawingView[]>> {
-      const result = await _repository.listAllDrawingsByUser(userId)
+    /* Alle tegningene til en bruker, også de private. Vises på Min side. */
+    async listAllDrawingsByUser(userId: string, page = 1, limit = DEFAULT_PAGE_SIZE): Promise<Result<DrawingPage>> {
+      const total = await _repository.countAllDrawingsByUser(userId)
+      if (!total.ok) return total
 
+      const { currentPage, safeAmount, totalPages, offset } = pageFor(total.data, page, limit)
+
+      const result = await _repository.listAllDrawingsByUser(userId, safeAmount, offset)
       if (!result.ok) return result
-      
-      return ResultHandler.success(result.data)
+
+      return ResultHandler.success({
+        items: result.data,
+        page: currentPage,
+        limit: safeAmount,
+        total: total.data,
+        totalPages,
+      })
     },
     async setDrawingVisibility(id: string, userId: string, input: unknown): Promise<Result<void>> {
       const parsed = drawingVisibilitySchema.safeParse(input);

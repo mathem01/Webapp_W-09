@@ -16,8 +16,10 @@ export interface DrawingRepository {
 
     listPublicDrawings(limit: number, offset: number): Promise<Result<PublicDrawingView[]>>
     countPublicDrawings(): Promise<Result<number>>
-    listPublicDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
-    listAllDrawingsByUser(userId: string): Promise<Result<DrawingView[]>>
+    listPublicDrawingsByUser(userId: string, limit: number, offset: number): Promise<Result<DrawingView[]>>
+    countPublicDrawingsByUser(userId: string): Promise<Result<number>>
+    listAllDrawingsByUser(userId: string, limit: number, offset: number): Promise<Result<DrawingView[]>>
+    countAllDrawingsByUser(userId: string): Promise<Result<number>>
 
     setDrawingVisibility(id: string, userId: string, visibility: boolean): Promise<Result<{ id: string } | null>>
 }
@@ -134,7 +136,7 @@ export function createDrawingRepository(_db: DB): DrawingRepository {
                 return row?.value ?? 0
             })
         },
-        async listPublicDrawingsByUser(userId: string) {
+        async listPublicDrawingsByUser(userId: string, limit: number, offset: number) {
             return executeDbOperation(async () => {
                 const rows = await _db
                     .select()
@@ -146,19 +148,48 @@ export function createDrawingRepository(_db: DB): DrawingRepository {
                         )
                     )
                     .orderBy(desc(drawings.createdAt))
+                    .limit(limit)
+                    .offset(offset)
 
                 return rows.map(toDrawingView)
             })
         },
-        async listAllDrawingsByUser(userId: string) {
+        async countPublicDrawingsByUser(userId: string) {
+            return executeDbOperation(async () => {
+                const [row] = await _db
+                    .select({ value: count() })
+                    .from(drawings)
+                    .where(
+                        and(
+                            eq(drawings.userId, userId),
+                            eq(drawings.isPublic, true)
+                        )
+                    )
+
+                return row?.value ?? 0
+            })
+        },
+        async listAllDrawingsByUser(userId: string, limit: number, offset: number) {
             return executeDbOperation(async () => {
                 const rows = await _db
                     .select()
                     .from(drawings)
                     .where(eq(drawings.userId, userId))
                     .orderBy(desc(drawings.createdAt))
+                    .limit(limit)
+                    .offset(offset)
 
                 return rows.map(toDrawingView)
+            })
+        },
+        async countAllDrawingsByUser(userId: string) {
+            return executeDbOperation(async () => {
+                const [row] = await _db
+                    .select({ value: count() })
+                    .from(drawings)
+                    .where(eq(drawings.userId, userId))
+
+                return row?.value ?? 0
             })
         },
         async setDrawingVisibility(id: string, userId: string, visibility: boolean) {

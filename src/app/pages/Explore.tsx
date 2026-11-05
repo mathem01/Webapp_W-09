@@ -24,7 +24,7 @@ export async function Explore({ ctx, request }: RequestInfo) {
       ) : (
         <>
           <ExploreGrid drawings={result.data.items} viewerUserId={ctx.session.userId} />
-          <Pagination page={result.data.page} totalPages={result.data.totalPages} limit={result.data.limit} />
+            <Pagination page={result.data.page} totalPages={result.data.totalPages} limit={result.data.limit} basePath="/explore" />
         </>
       )}
     </section>
