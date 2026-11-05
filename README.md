@@ -89,29 +89,35 @@ Appen åpnes på `http://localhost:5173`.
 src/
 ├── worker.tsx                         ruter og middleware
 ├── middleware/                        session og tilgangskontroll
-├── auth/                              valideringsregler for innlogging
+├── lib/                               Better Auth-oppsett, Result-typen og ID-er
 ├── app/
-│   ├── pages/                         sidene i appen
+│   ├── pages/                         forsiden, utforsk, min side og admin
 │   ├── layouts/                       felles layout og navigasjon
 │   └── headers.ts                     sikkerhetsheadere
 ├── features/
 │   ├── drawings/
 │   │   ├── components/                tegnekomponenter og grensesnitt
 │   │   ├── pages/Canvas.tsx           canvas-siden
+│   │   ├── hooks/                     tegnelogikk og autolagring
+│   │   ├── utils/                     hjelpefunksjoner for piksler og verktøy
+│   │   ├── __tests__/                 tester for tegnefunksjonen
 │   │   ├── actions.ts                 server actions
 │   │   ├── drawing-routes.ts          REST-ruter
 │   │   ├── drawing-controller.ts      HTTP inn og ut
 │   │   ├── drawing-service.ts         regler og autorisasjon
 │   │   ├── drawing-repository.ts      lesing og lagring i databasen
 │   │   ├── drawing-mapper.ts          formen på data ut av datalaget
-│   │   └── drawing-schema.ts          Zod-regler og TypeScript-typer
-│   └── users/                          brukerprofil gjennom samme lagdeling
+│   │   ├── drawing-schema.ts          Zod-regler
+│   │   └── drawing-types.ts           TypeScript-typer
+│   ├── login/                         innlogging, registrering og logg ut
+│   └── users/                         brukerprofil gjennom samme lagdeling
+├── shared/components/                 felles komponenter, som paginering
 ├── db/
-│   ├── schema/                         tabellene for auth og tegninger
-│   ├── relations.ts                    relasjonene mellom tabellene
-│   ├── seed.ts                         kjøring av seed
-│   └── seed-data.ts                    testdata
-└── test/                               felles testoppsett
+│   ├── schema/                        tabellene for auth og tegninger
+│   ├── relations.ts                   relasjonene mellom tabellene
+│   ├── seed.ts                        kjøring av seed
+│   └── seed-data.ts                   testdata
+└── test/                              felles testoppsett                      
 
 drizzle/migrations/                     SQL-migrasjoner
 e2e/                                    Playwright-tester
@@ -144,6 +150,8 @@ Server actions bruker den samme servicen som REST-endepunktene. På den måten l
 | `PATCH /api/v1/drawings/:drawingId/visibility` | Endrer mellom privat og offentlig |
 | `GET /api/v1/me/drawings` | Henter tegningene til innlogget bruker |
 | `GET /api/v1/users/:userId/drawings` | Henter offentlige tegninger fra en bruker |
+| `GET /api/v1/users/:username` | Henter en bruker |
+| `GET /api/v1/status` | Sjekker at serveren svarer |
 
 Ruter som oppretter, endrer eller sletter data er beskyttet på serveren. Det holder derfor ikke å bare skjule en knapp i grensesnittet. Serveren sjekker session og eierskap før endringen utføres.
 
