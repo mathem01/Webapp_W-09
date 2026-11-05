@@ -5,7 +5,7 @@ import { ErrorResponse, requestInfo } from "rwsdk/worker";
 
 import { requireUser } from "@/middleware/guards";
 import { service } from "@/features/drawings/drawing-service";
-import { Errors, ServerResult, ResultError, ResultHandler, ServerResultHandler } from "@/lib/result";
+import { Errors, ServerResult, ServerResultHandler } from "@/lib/result";
 import { createDrawingFormSchema, type DrawingInput, visibilityFormSchema } from "./drawing-schema";
 import { demoDelay } from "@/lib/demo-chaos";
 import { createEmptyPixels } from "./utils/pixels";
@@ -72,19 +72,16 @@ export async function saveDrawingAction(
     })
   }
 
-  const result = await service.createDrawing(
-    session.userId,
-    drawing,
-  );
+  const result = await service.createDrawing(session.userId, drawing);
 
   if (!result.ok) {
     return ServerResultHandler.failure(
       result.error.message,
       result.error.code,
       {
-          ...previous,
-          failedRevision: payload.revision
-        },
+        ...previous,
+        failedRevision: payload.revision
+      },
       result.error.fieldErrors,
     );
   }
@@ -96,114 +93,98 @@ export async function saveDrawingAction(
   });
 }
 
-/** Henter innlogget bruker, og smalner typen slik at userId er en string. */
-function currentUser() {
-  const session = requireUser();
-  if (!session.userId) throw new ErrorResponse(401, "Login required");
-  return { id: session.userId, isAdmin: session.role === "admin" };
-}
-
-export async function createDrawing(input: unknown) {
-  const user = currentUser();
-  return service.createDrawing(user.id, input);
-}
-
-export type CreateDrawingState = {
-  drawingId: string | null;
-  error: string | null;
+export type CreateDrawingFormValues = {
+  title: string;
+  width: number;
+  height: number;
 };
+
+export type CreateDrawingResult = ServerResult<{ id: string | null }, CreateDrawingFormValues>
 
 export async function createDrawingFromForm(
-  previousState: CreateDrawingState,
+  previousState: CreateDrawingResult,
   formData: FormData
-): Promise<CreateDrawingState> {
-  const parsed = createDrawingFormSchema.safeParse({
-    title: formData.get("title"),
-    width: formData.get("width"),
-    height: formData.get("height"),
+): Promise<CreateDrawingResult> {
+  const values: CreateDrawingFormValues = {
+    title: String(formData.get("title") ?? " "),
+    width: Number(formData.get("width") ?? 0),
+    height: Number(formData.get("height") ?? 0),
+  }
+
+  const session = requireUser();
+
+  if (!session.userId) {
+    return ServerResultHandler.failure(
+      "Du må være logget inn",
+      Errors.UNAUTHORIZED,
+      values
+    );
+  }
+
+  const { title, width, height } = values;
+  const result = await service.createDrawing(session.userId, {
+    title,
+    width,
+    height,
+    pixels: createEmptyPixels(width, height),
   });
 
-  if (!parsed.success) {
-    return {
-      drawingId: previousState.drawingId,
-      error: "Skriv inn en tittel og gyldig bredde og høyde.",
-    };
+  if (!result.ok) {
+    return ServerResultHandler.failure(
+      result.error.message,
+      result.error.code,
+      values,
+      result.error.fieldErrors,
+    )
   }
 
-  try {
-    const user = currentUser();
-    const { title, width, height } = parsed.data;
-    const result = await service.createDrawing(user.id, {
-      title,
-      width,
-      height,
-      pixels: createEmptyPixels(width, height),
-    });
-
-    if (!result.ok) {
-      return { drawingId: null, error: result.error.message };
-    }
-
-    return { drawingId: result.data.id, error: null };
-  } catch {
-    return { drawingId: null, error: "Kunne ikke opprette tegningen." };
-  }
+  return ServerResultHandler.success(result.data)
 }
 
-export async function updateDrawing(id: string, input: unknown) {
-  const user = currentUser();
-  return service.updateDrawing(id, user.id, input);
-}
+// export async function deleteDrawing(id: string) {
+//   const user = requireUser();
+//   return service.deleteDrawing(id, user.id);
+// }
 
-export async function deleteDrawing(id: string) {
-  const user = currentUser();
-  return service.deleteDrawing(id, user.id);
-}
-
-export async function setDrawingVisibility(drawingId: string, isPublic: boolean) {
-  const user = currentUser();
-  return service.setDrawingVisibility(drawingId, user.id, { isPublic });
-}
-
-type VisibilityState = {
+export type ChangeVisiblityFormValues = {
+  id: string;
   visibility: boolean;
-  error: string | null;
 };
 
-
+export type ChangeVisibilityResult = ServerResult<{ visibility: boolean }, ChangeVisiblityFormValues>
 
 export async function changeVisibility(
-  previousState: VisibilityState,
+  previousState: ChangeVisibilityResult,
   formData: FormData
-): Promise<VisibilityState> {
-  try {
-    const user = currentUser();
-    const parsed = visibilityFormSchema.safeParse({
-      drawingId: formData.get("drawingId"),
-      isPublic: formData.get("isPublic"),
-    });
-
-    if (!parsed.success) {
-      return { visibility: previousState.visibility, error: "Ugyldige skjemadata." };
-    }
-
-    const isPublic = parsed.data.isPublic === "true";
-    const result = await service.setDrawingVisibility(
-      parsed.data.drawingId,
-      user.id,
-      { isPublic }
-    );
-
-    if (!result.ok) {
-      return { visibility: previousState.visibility, error: result.error.message };
-    }
-
-    return { visibility: isPublic, error: null };
-  } catch {
-    return {
-      visibility: previousState.visibility,
-      error: "Kunne ikke lagre endringen. Prøv igjen.",
-    };
+): Promise<ChangeVisibilityResult> {
+  const values: ChangeVisiblityFormValues = {
+    id: String(formData.get("drawingId") ?? " "),
+    visibility: String(formData.get("isPublic")) === "true" ? true : false,
   }
+
+  const session = requireUser();
+
+  if (!session.userId) {
+    return ServerResultHandler.failure(
+      "Du må være logget inn",
+      Errors.UNAUTHORIZED,
+      values
+    );
+  }
+
+  const { id, visibility } = values
+
+  const result = await service.setDrawingVisibility(id, session.userId, { isPublic: visibility });
+
+  if (!result.ok) {
+    return ServerResultHandler.failure(
+      result.error.message,
+      result.error.code,
+      values,
+      result.error.fieldErrors,
+    )
+  }
+
+  return ServerResultHandler.success({ visibility })
 }
 

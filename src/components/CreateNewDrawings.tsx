@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import {
   createDrawingFromForm,
-  type CreateDrawingState,
+  type CreateDrawingResult,
 } from "@/features/drawings/actions";
 import {
   MAX_SIZE,
@@ -11,23 +11,20 @@ import {
   MIN_SIZE,
 } from "@/features/drawings/drawing-schema";
 
-const initialState: CreateDrawingState = {
-  drawingId: null,
-  error: null,
+const initialState: CreateDrawingResult = {
+  ok: true,
+  data: { id: null },
 };
 
 export function CreateNewDrawings() {
   const [isOpen, setIsOpen] = useState(false);
-  const [state, formAction, isPending] = useActionState(
-    createDrawingFromForm,
-    initialState
-  );
+  const [state, formAction, isPending] = useActionState(createDrawingFromForm, initialState);
 
   useEffect(() => {
-    if (state.drawingId) {
-      window.location.href = `/canvas/${(state.drawingId)}`;
+    if (state.ok && state.data.id !== null) {
+      window.location.href = `/canvas/${(state.data.id)}`;
     }
-  }, [state.drawingId]);
+  }, [state]);
 
   return (
     <>
@@ -76,7 +73,7 @@ export function CreateNewDrawings() {
                 </label>
               </div>
 
-              {state.error && <p role="alert" className="text-sm text-red-700">{state.error}</p>}
+              {!state.ok && <p role="alert" className="text-sm text-red-700">{state.error.message}</p>}
 
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setIsOpen(false)} disabled={isPending} className="min-h-11 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
