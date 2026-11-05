@@ -141,10 +141,42 @@ export async function createDrawingFromForm(
   return ServerResultHandler.success(result.data)
 }
 
-// export async function deleteDrawing(id: string) {
-//   const user = requireUser();
-//   return service.deleteDrawing(id, user.id);
-// }
+export type DeleteDrawingResult = ServerResult<{ id: string }, { id: string }>
+
+export async function deleteDrawing(
+  previousState: DeleteDrawingResult,
+  formData: FormData
+): Promise<DeleteDrawingResult> {
+
+  const values = {
+    id: String(formData.get("drawingId") ?? " "),
+  }
+
+  const session = requireUser();
+
+  if (!session.userId) {
+    return ServerResultHandler.failure(
+      "Du må være logget inn",
+      Errors.UNAUTHORIZED,
+      values
+    );
+  }
+
+  const { id } = values
+
+  const result = await service.deleteDrawing(id, session.userId);
+
+  if (!result.ok) {
+    return ServerResultHandler.failure(
+      result.error.message,
+      result.error.code,
+      values,
+      result.error.fieldErrors,
+    )
+  }
+
+  return ServerResultHandler.success({ id })
+}
 
 export type ChangeVisiblityFormValues = {
   id: string;
