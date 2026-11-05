@@ -1,5 +1,6 @@
 "use client";
 import { changeVisibility, ChangeVisibilityResult } from "@/features/drawings/actions";
+import { DeleteDrawing } from "@/features/drawings/components/DeleteDrawing";
 import { useId, useRef, useState, useActionState } from "react";
 
 
@@ -80,6 +81,10 @@ export function DrawingOptions({ drawingId, title, isPublic }: Props) {
 
           </fieldset>
         </form>
+
+        <div className="mt-3 border-t border-gray-200 pt-3">
+          <DeleteDrawing drawingId={drawingId} />
+        </div>
 
       </div>
       {!state.ok && <p role="alert" className="mt-3 text-sm text-red-700">{state.error.message}</p>}
