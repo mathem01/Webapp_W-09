@@ -244,4 +244,4 @@ Nye tegninger er private. Brukeren må selv velge å publisere dem. Servicen sje
 
 ## Avgrensninger
 
-Vi prioriterte hovedflyten med innlogging, tegning, lagring og publisering. Kommentarfeltet i visningen av en offentlig tegning er derfor bare et eksempel på grensesnittet og lagrer ikke kommentarer. Full støtte for likes og remiks ble heller ikke en del av den ferdige hovedflyten.
+Vi prioriterte hovedflyten med innlogging, tegning, lagring og publisering. Likes og kommentarer i visningen av en offentlig tegning virker i nettleseren, men lagres ikke i databasen, så de forsvinner når siden lastes på nytt. Remiks ble heller ikke en del av den ferdige hovedflyten.
