@@ -1,7 +1,7 @@
 "use client";
 
 import {useState, useTransition} from "react"; 
-import {registerSchema, firstIssue } from "@/auth/schemas";
+import {registerSchema, firstIssue } from "@/features/login/login-schema";
 
 export function RegisterForm() {
 

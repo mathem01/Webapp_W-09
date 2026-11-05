@@ -2,7 +2,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { service } from "@/features/drawings/drawing-service";
-import { ProfileDrawings } from "./ProfileDrawings";
+import { ProfileDrawings } from "../components/ProfileDrawings";
 
 vi.mock("@/features/drawings/drawing-service", () => ({
   service: {
