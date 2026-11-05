@@ -56,7 +56,7 @@ export function createDrawingController(_service: DrawingService): DrawingContro
       const body = await parseJson(request);
       if (!body.ok) return toResponse(body);
 
-      const result = await _service.updateDrawing(params.drawingId, userId!, body);
+      const result = await _service.updateDrawing(params.drawingId, userId!, body.data);
 
       return toResponse(result)
     },
