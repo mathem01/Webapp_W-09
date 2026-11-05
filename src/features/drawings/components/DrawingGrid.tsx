@@ -33,13 +33,8 @@ export function DrawingGrid({
           {editable ? (
             <DrawingOptions drawingId={drawing.id} title={drawing.title} isPublic={drawing.isPublic} />
           ) : (
-          <div className="flex items-center justify-between gap-2 px-3 py-1.5 text-sm">
+          <div className="flex items-center justify-between gap-2 px-3 py-1.5 text-sm font-medium">
             <span className="truncate">{drawing.title}</span>
-            <a
-              href={`/drawing/${drawing.id}`}
-              className="rounded bg-neutral-300 px-2 py-0.5 transition hover:bg-neutral-100">
-              Åpne
-            </a>
           </div>
           )}
         </li>
