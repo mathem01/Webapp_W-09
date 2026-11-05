@@ -30,7 +30,6 @@ export async function Profile({ params, request }: RequestInfo) {
      deles. Mangler limit, bestemmer servicen standardverdien. */
   const query = new URL(request.url).searchParams;
   const page = Number(query.get("page") ?? 1);
-  const limit = query.get("limit") ? Number(query.get("limit")) : undefined;
 
   return (
     <section className="min-h-[80vh] bg-gray-50 px-4 py-10 sm:px-6">
@@ -51,7 +50,6 @@ export async function Profile({ params, request }: RequestInfo) {
                 <ProfileDrawings
               userId={profile.id}
               page={page}
-              limit={limit}
               basePath={`/profile/${normalizedUsername}`}
             />
           </Suspense>
