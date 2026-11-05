@@ -506,7 +506,7 @@ describe("drawingService.listPublicDrawingsByUser", () => {
     expect(result.ok).toBe(true);
 
     if (result.ok) {
-      expect(result.data.map((item) => item.title)).toEqual([
+      expect(result.data.items.map((item) => item.title)).toEqual([
         "Alice offentlig",
       ]);
     }
@@ -540,7 +540,7 @@ describe("drawingService.listAllDrawingsByUser", () => {
     expect(result.ok).toBe(true);
 
     if (result.ok) {
-      expect(result.data.map((item) => item.title).sort()).toEqual([
+      expect(result.data.items.map((item) => item.title).sort()).toEqual([
         "Offentlig",
         "Privat",
       ]);
@@ -556,7 +556,7 @@ describe("drawingService.listAllDrawingsByUser", () => {
     expect(result.ok).toBe(true);
 
     if (result.ok) {
-      expect(result.data.map((item) => item.title)).toEqual([
+      expect(result.data.items.map((item) => item.title)).toEqual([
         "Alice",
       ]);
     }

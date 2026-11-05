@@ -2,16 +2,19 @@ type Props = {
   page: number;
   totalPages: number;
   limit?: number;
+  basePath: string;
 };
 
-export function Pagination({ page, totalPages, limit }: Props) {
+export function Pagination({ page, totalPages, limit, basePath }: Props) {
   if (totalPages <= 1) return null;
- /* Lenkene må ta med sidestørrelsen, ellers faller den tilbake til
-     standardverdien når man bytter side. */
 
+  /* Lenkene må ta med sidestørrelsen, ellers faller den tilbake til
+     standardverdien når man bytter side. basePath kommer utenfra, så
+     samme komponent kan brukes på feeden, profilsiden og Min side. */
   const lenke = (tilSide: number) =>
-    limit ? `/explore?page=${tilSide}&limit=${limit}` : `/explore?page=${tilSide}`;
-
+    limit
+      ? `${basePath}?page=${tilSide}&limit=${limit}`
+      : `${basePath}?page=${tilSide}`;
   
   const lenkeStil =
     "rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50";

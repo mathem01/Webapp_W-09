@@ -2,13 +2,17 @@ import type { Result } from "@/lib/result";
 import type { DrawingView } from "@/features/drawings/drawing-types";
 import { service as drawingService } from "@/features/drawings/drawing-service";
 import { DrawingGrid } from "@/features/drawings/components/DrawingGrid";
+import { Pagination } from "@/features/drawings/components/Pagination";
 
 type Props = {
   userId: string;
+  page: number;
+   limit?: number;
+  basePath: string;
 };
 
-export async function ProfileDrawings({ userId }: Props) {
-  const result = await drawingService.listPublicDrawingsByUser(userId);
+export async function ProfileDrawings({ userId, page, limit, basePath }: Props) {
+  const result = await drawingService.listPublicDrawingsByUser(userId, page, limit);
 
   if (!result.ok) {
     return (
@@ -21,9 +25,9 @@ export async function ProfileDrawings({ userId }: Props) {
     );
   }
 
-  const drawings = result.data;
+    const drawings = result.data.items;
 
-  if (drawings.length === 0) {
+    if (result.data.total === 0) {
     return (
       <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
         <h3 className="font-medium text-gray-900">
@@ -39,12 +43,19 @@ export async function ProfileDrawings({ userId }: Props) {
 
   return (
     <>
-      <p className="mb-4 text-sm text-gray-500">
-        {drawings.length}{" "}
-        {drawings.length === 1 ? "tegning" : "tegninger"}
+            <p className="mb-4 text-sm text-gray-500">
+        {result.data.total}{" "}
+        {result.data.total === 1 ? "tegning" : "tegninger"}
       </p>
 
       <DrawingGrid drawings={drawings} />
+
+      <Pagination
+        page={result.data.page}
+        totalPages={result.data.totalPages}
+        limit={result.data.limit}
+        basePath={basePath}
+      />
     </>
   );
 }

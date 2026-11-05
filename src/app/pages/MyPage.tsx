@@ -4,9 +4,15 @@ import { MyDrawings } from "@/features/drawings/components/MyDrawings";
 import { DrawingGridSkeleton } from "@/features/drawings/components/DrawingGridSkeleton";
 import { CreateNewDrawings } from "@/components/CreateNewDrawings";
 
-export async function MyPage({ ctx }: RequestInfo) {
+export async function MyPage({ ctx, request }: RequestInfo) {
   const { userId, username, email } = ctx.session;
   if (!userId) throw new ErrorResponse(401, "Login required");
+  
+    /* Sidetall og sidestørrelse står i URL-en, så en side kan bokmerkes og
+     deles. Mangler limit, bestemmer servicen standardverdien. */
+  const query = new URL(request.url).searchParams;
+  const page = Number(query.get("page") ?? 1);
+  const limit = query.get("limit") ? Number(query.get("limit")) : undefined;
 
   const initial = username?.charAt(0).toUpperCase() || "?";
 
@@ -90,7 +96,7 @@ export async function MyPage({ ctx }: RequestInfo) {
           <CreateNewDrawings />
 
           <Suspense fallback={<DrawingGridSkeleton />}>
-            <MyDrawings userId={userId} />
+          <MyDrawings userId={userId} page={page} limit={limit} basePath="/myPage" />
           </Suspense>
         </section>
       </div>

@@ -61,7 +61,6 @@ export function Home() {
           </div>
         </div>
       </div>
-      <p>Hello World</p>
     </section>
   );
 }

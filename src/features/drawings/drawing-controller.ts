@@ -17,6 +17,19 @@ export interface DrawingController {
   setVisibility(requestInfo: RequestInfo): Promise<Response>;
 }
 
+/* Leser sidetall og sidestørrelse fra spørringsstrengen.
+   Sidetall og sidestørrelse er spørringsparametre, ikke del av stien:
+   de er filter på samme ressurs, ikke en annen ressurs. Ugyldige
+   verdier blir til standardverdiene i servicen, ikke 400. */
+function readPageParams(request: Request) {
+  const params = new URL(request.url).searchParams;
+
+  return {
+    page: Number(params.get("page") ?? 1),
+    limit: Number(params.get("limit") ?? DEFAULT_PAGE_SIZE),
+  };
+}
+
 export function createDrawingController(_service: DrawingService): DrawingController {
   return {
     async create({ request }: RequestInfo): Promise<Response> {
@@ -54,34 +67,32 @@ export function createDrawingController(_service: DrawingService): DrawingContro
 
       return toResponse(result);
     },
-        /* GET /api/v1/drawings?page=2&limit=12
-
-       Sidetall og sidestørrelse er spørringsparametre, ikke del av stien:
-       de er filter på samme ressurs, ikke en annen ressurs. Ugyldige
-       verdier blir til standardverdiene i servicen, ikke 400. */
+       /* GET /api/v1/drawings?page=2&limit=12 */
     async listPublic({ request }: RequestInfo) {
-      const params = new URL(request.url).searchParams;
-
-      const page = Number(params.get("page") ?? 1);
-      const limit = Number(params.get("limit") ?? DEFAULT_PAGE_SIZE);
+      const { page, limit } = readPageParams(request);
 
       const result = await _service.listPublicDrawings(page, limit);
 
       return toResponse(result);
     },
-    
-    async listPublicByUser({ params }: RequestInfo): Promise<Response> {
-      const result = await _service.listPublicDrawingsByUser(params.userId);
+
+    async listPublicByUser({ request, params }: RequestInfo): Promise<Response> {
+      const { page, limit } = readPageParams(request);
+
+      const result = await _service.listPublicDrawingsByUser(params.userId, page, limit);
 
       return toResponse(result);
     },
-    async listAllByUser(): Promise<Response> {
+    async listAllByUser({ request }: RequestInfo): Promise<Response> {
       const { userId } = requireUser();
 
-      const result = await _service.listAllDrawingsByUser(userId!);
+      const { page, limit } = readPageParams(request);
+
+      const result = await _service.listAllDrawingsByUser(userId!, page, limit);
 
       return toResponse(result);
     },
+    
     async setVisibility({ request, params }: RequestInfo): Promise<Response> {
       const { userId } = requireUser();
 

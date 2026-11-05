@@ -17,12 +17,16 @@ export type PublicDrawingView = DrawingView & {
   owner: { id: string; username: string };
 };
 
-/* Én side med tegninger, pluss det siden trenger for å tegne
-   neste og forrige. */
-export type PublicDrawingPage = {
-  items: PublicDrawingView[];
+/* Én side med resultater, pluss det siden trenger for å tegne
+   neste og forrige. Generisk, så den kan brukes på både feeden og
+   profilsidene uten å gjenta formen. */
+export type Page<T> = {
+  items: T[];
   page: number;
   limit: number;
   total: number;
   totalPages: number;
 };
+
+export type PublicDrawingPage = Page<PublicDrawingView>;
+export type DrawingPage = Page<DrawingView>;
