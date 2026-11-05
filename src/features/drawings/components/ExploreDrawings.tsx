@@ -1,5 +1,5 @@
 import { service } from "@/features/drawings/drawing-service";
-import { Pagination } from "@/features/drawings/components/Pagination";
+import { Pagination } from "@/shared/components/Pagination";
 import { ExploreGrid } from "./ExploreGrid";
 
 type Props = {

@@ -1,6 +1,6 @@
 import { service as drawingService } from "@/features/drawings/drawing-service";
 import { DrawingGrid } from "@/features/drawings/components/DrawingGrid";
-import { Pagination } from "@/features/drawings/components/Pagination";
+import { Pagination } from "@/shared/components/Pagination";
 
 type Props = {
   userId: string;
